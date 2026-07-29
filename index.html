@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a6b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PT単語帳">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>ポルトガル語単語帳</title>
+<style>
+/* ===== リセット & 変数 ===== */
+:root {
+  --verde: #1a6b3a;
+  --verde2: #2d8f52;
+  --verde3: #e8f5ee;
+  --azul:  #0d3b8c;
+  --ouro:  #f5b82e;
+  --bg:    #f4f6f8;
+  --card:  #ffffff;
+  --text:  #1a1a2e;
+  --sub:   #6b7280;
+  --borda: #e2e8f0;
+  --radius: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body {
+  font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* ===== ステータスバー余白 ===== */
+.status-pad { height: calc(var(--safe-top) + 0px); background: var(--verde); }
+
+/* ===== ヘッダー ===== */
+.app-header {
+  background: var(--verde);
+  color: white;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.app-title { font-size: 1.1rem; font-weight: 700; flex: 1; }
+.app-title span { color: var(--ouro); }
+.header-search {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: white;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  width: 130px;
+  transition: width 0.3s, background 0.2s;
+}
+.header-search::placeholder { color: rgba(255,255,255,0.65); }
+.header-search:focus { width: 160px; background: rgba(255,255,255,0.28); }
+
+/* ===== カテゴリスクロール ===== */
+.cat-scroll {
+  background: var(--azul);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-list {
+  display: flex;
+  padding: 0 12px;
+  gap: 2px;
+}
+.cat-btn {
+  background: none; border: none;
+  color: rgba(255,255,255,0.65);
+  padding: 8px 12px;
+  font-size: 0.76rem; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.cat-btn.active { color: var(--ouro); border-bottom-color: var(--ouro); font-weight: 700; }
+
+/* ===== 統計バー ===== */
+.stats-bar {
+  background: var(--card);
+  border-bottom: 1px solid var(--borda);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--sub);
+}
+.stats-bar strong { color: var(--verde); font-weight: 700; }
+.dir-toggle {
+  margin-left: auto;
+  display: flex;
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.dir-btn {
+  background: none; border: none;
+  padding: 4px 10px;
+  font-size: 0.72rem; font-family: inherit;
+  cursor: pointer; color: var(--sub);
+  transition: all 0.15s;
+}
+.dir-btn.active { background: var(--verde); color: white; font-weight: 700; }
+
+/* ===== タブバー ===== */
+.tab-bar {
+  background: var(--card);
+  border-top: 1px solid var(--borda);
+  display: flex;
+  padding-bottom: var(--safe-bot);
+  flex-shrink: 0;
+  order: 99;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+}
+.tab-btn {
+  flex: 1; background: none; border: none;
+  padding: 10px 0 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; font-family: inherit; color: var(--sub);
+  transition: color 0.15s;
+}
+.tab-btn.active { color: var(--verde); }
+.tab-icon { font-size: 1.4rem; line-height: 1; }
+.tab-label { font-size: 0.65rem; font-weight: 600; }
+
+/* ===== スクロール領域 ===== */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ===== パネル ===== */
+.panel { display: none; height: 100%; }
+.panel.active { display: flex; flex-direction: column; height: 100%; }
+
+/* ===== 一覧パネル ===== */
+#listPanel.active { display: block; overflow-y: auto; padding: 10px 12px 20px; }
+.word-item {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: transform 0.1s;
+  -webkit-user-select: none;
+}
+.word-item:active { transform: scale(0.98); }
+.word-item.learned { border-left: 3px solid var(--verde2); background: var(--verde3); }
+.w-num { font-size: 0.68rem; color: var(--borda); font-weight: 700; min-width: 24px; text-align: right; }
+.w-front { font-size: 1.05rem; font-weight: 700; color: var(--azul); flex: 1; }
+.w-back { font-size: 0.85rem; color: var(--sub); flex: 1; }
+.w-actions { display: flex; gap: 4px; }
+.w-act-btn {
+  background: none; border: none;
+  width: 32px; height: 32px; border-radius: 8px;
+  font-size: 1rem; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.w-act-btn:active { background: var(--borda); }
+
+/* ページネーション */
+.pag-wrap { display: flex; justify-content: center; gap: 6px; padding: 12px 0 4px; flex-wrap: wrap; }
+.pag-btn {
+  background: var(--card); border: 1px solid var(--borda); border-radius: 8px;
+  padding: 5px 12px; font-size: 0.78rem; cursor: pointer; font-family: inherit;
+  font-weight: 600; color: var(--text);
+}
+.pag-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
+.pag-btn:disabled { opacity: 0.3; }
+
+/* ===== フラッシュカードパネル ===== */
+#fcPanel.active { display: flex; flex-direction: column; align-items: center; padding: 16px 16px 12px; gap: 14px; overflow-y: auto; }
+
+.fc-progress-row {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+}
+.fc-counter { font-size: 0.8rem; color: var(--sub); white-space: nowrap; }
+.fc-prog-bar { flex: 1; height: 5px; background: var(--borda); border-radius: 3px; overflow: hidden; }
+.fc-prog-fill { height: 100%; background: var(--verde); border-radius: 3px; transition: width 0.3s; }
+
+/* カード */
+.fc-card-wrap { width: 100%; max-width: 420px; position: relative; }
+.fc-card {
+  width: 100%; min-height: 220px;
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 24px; gap: 12px;
+  cursor: pointer;
+  transition: background 0.25s, box-shadow 0.25s;
+  position: relative;
+  border: 2px solid transparent;
+  -webkit-user-select: none;
+}
+.fc-card:active { transform: scale(0.985); }
+.fc-card.back {
+  background: var(--verde);
+  color: white;
+  box-shadow: 0 6px 24px rgba(26,107,58,0.35);
+  border-color: var(--verde2);
+}
+.fc-badge {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--bg); color: var(--sub);
+  font-size: 0.6rem; padding: 3px 8px; border-radius: 20px; font-weight: 700;
+}
+.fc-card.back .fc-badge { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
+.fc-lang { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.5; font-weight: 700; }
+.fc-word { font-size: 2rem; font-weight: 700; text-align: center; line-height: 1.3; }
+.fc-hint { font-size: 0.72rem; opacity: 0.4; margin-top: 6px; }
+.fc-speak {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid var(--borda);
+  background: var(--bg); cursor: pointer;
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  color: var(--verde); transition: background 0.15s;
+}
+.fc-card.back .fc-speak { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); color: white; }
+.fc-speak:active { background: var(--borda); }
+
+/* ナビゲーション */
+.fc-nav {
+  display: flex; gap: 10px; align-items: center; width: 100%; max-width: 420px;
+}
+.fc-nav-btn {
+  flex: 1; background: var(--card); border: 1px solid var(--borda);
+  border-radius: 12px; padding: 12px; font-size: 0.9rem; cursor: pointer;
+  font-family: inherit; font-weight: 700; color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transition: all 0.15s;
+}
+.fc-nav-btn:active { background: var(--verde); color: white; border-color: var(--verde); }
+.fc-shuf {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: var(--ouro); border: none; cursor: pointer;
+  font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.fc-shuf:active { opacity: 0.8; }
+
+.fc-learned-btn {
+  width: 100%; max-width: 420px;
+  background: var(--verde); color: white;
+  border: none; border-radius: 12px;
+  padding: 13px; font-size: 0.9rem; font-family: inherit;
+  font-weight: 700; cursor: pointer;
+  box-shadow: 0 3px 10px rgba(26,107,58,0.3);
+}
+.fc-learned-btn:active { opacity: 0.85; }
+
+/* ===== クイズパネル ===== */
+#quizPanel.active { display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 14px; overflow-y: auto; }
+.quiz-q-card {
+  width: 100%; max-width: 420px;
+  background: var(--azul); color: white;
+  border-radius: 20px; padding: 28px 24px;
+  text-align: center; box-shadow: 0 6px 24px rgba(13,59,140,0.25);
+}
+.quiz-qlabel { font-size: 0.68rem; letter-spacing: 0.1em; opacity: 0.6; text-transform: uppercase; margin-bottom: 10px; }
+.quiz-qword { font-size: 2rem; font-weight: 700; }
+.quiz-choices {
+  width: 100%; max-width: 420px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.quiz-choice {
+  background: var(--card); border: 2px solid var(--borda);
+  border-radius: 12px; padding: 14px 10px;
+  font-size: 0.88rem; font-family: inherit; font-weight: 600;
+  cursor: pointer; text-align: center; color: var(--text);
+  transition: all 0.15s; line-height: 1.3;
+}
+.quiz-choice:active { transform: scale(0.96); }
+.quiz-choice.correct { background: var(--verde3); border-color: var(--verde2); color: var(--verde); }
+.quiz-choice.wrong { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.quiz-choice.disabled { cursor: default; opacity: 0.6; }
+.quiz-result {
+  width: 100%; max-width: 420px;
+  background: var(--card); border-radius: 16px;
+  padding: 16px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font-size: 0.85rem; color: var(--sub);
+  min-height: 54px; display: flex; align-items: center; justify-content: center;
+}
+.quiz-result.ok { color: var(--verde); font-weight: 700; font-size: 1rem; }
+.quiz-result.ng { color: #dc2626; font-weight: 700; font-size: 0.9rem; }
+.quiz-next-btn {
+  width: 100%; max-width: 420px;
+  background: var(--verde); color: white; border: none;
+  border-radius: 12px; padding: 13px; font-size: 0.9rem;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  display: none;
+}
+.quiz-score-bar {
+  width: 100%; max-width: 420px;
+  display: flex; gap: 12px;
+}
+.quiz-score-item {
+  flex: 1; background: var(--card); border-radius: 12px; padding: 10px;
+  text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.quiz-score-num { font-size: 1.5rem; font-weight: 700; }
+.quiz-score-num.ok { color: var(--verde); }
+.quiz-score-num.ng { color: #dc2626; }
+.quiz-score-label { font-size: 0.68rem; color: var(--sub); margin-top: 2px; }
+
+/* ===== トースト ===== */
+.toast {
+  position: fixed; bottom: calc(70px + var(--safe-bot)); left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(28,28,30,0.88); color: white;
+  padding: 10px 20px; border-radius: 20px; font-size: 0.82rem;
+  opacity: 0; transition: all 0.3s; z-index: 999; pointer-events: none;
+  white-space: nowrap; backdrop-filter: blur(8px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== インストールバナー ===== */
+.install-banner {
+  background: var(--ouro); color: var(--text);
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  font-size: 0.82rem; font-weight: 600; flex-shrink: 0;
+}
+.install-banner.hidden { display: none; }
+.install-banner button {
+  margin-left: auto; background: var(--text); color: white;
+  border: none; border-radius: 8px; padding: 6px 14px;
+  font-size: 0.78rem; font-family: inherit; font-weight: 700; cursor: pointer;
+}
+.install-x {
+  background: none; border: none; font-size: 1.1rem; cursor: pointer;
+  color: var(--text); padding: 2px 4px; margin-left: -4px;
+}
+</style>
+</head>
+<body>
+
+<div class="status-pad"></div>
+
+<!-- インストールバナー -->
+<div class="install-banner hidden" id="installBanner">
+  <span>📲</span>
+  <span>ホーム画面に追加してアプリとして使えます</span>
+  <button id="installBtn">追加</button>
+  <button class="install-x" id="installX">✕</button>
+</div>
+
+<!-- ヘッダー -->
+<div class="app-header">
+  <div class="app-title">PT<span>語</span>単語帳</div>
+  <input class="header-search" type="search" id="searchInput" placeholder="🔍 検索…">
+</div>
+
+<!-- カテゴリ -->
+<div class="cat-scroll"><div class="cat-list" id="catList"></div></div>
+
+<!-- 統計バー -->
+<div class="stats-bar">
+  <span>全 <strong id="totalCnt">—</strong> 語</span>
+  <span>表示 <strong id="showCnt">—</strong></span>
+  <span>✅ <strong id="learnCnt">0</strong></span>
+  <div class="dir-toggle">
+    <button class="dir-btn active" id="dPJ" onclick="setDir('pt-jp')">PT→JP</button>
+    <button class="dir-btn" id="dJP" onclick="setDir('jp-pt')">JP→PT</button>
+  </div>
+</div>
+
+<!-- パネル -->
+<div id="listPanel" class="panel active">
+  <div id="wordList"></div>
+  <div class="pag-wrap" id="pagWrap"></div>
+</div>
+
+<div id="fcPanel" class="panel">
+  <div class="fc-progress-row">
+    <span class="fc-counter" id="fcCounter">1/1</span>
+    <div class="fc-prog-bar"><div class="fc-prog-fill" id="fcProg" style="width:0%"></div></div>
+  </div>
+  <div class="fc-card-wrap">
+    <div class="fc-card" id="fcCard" onclick="flipCard()">
+      <div class="fc-badge" id="fcBadge">—</div>
+      <div class="fc-lang" id="fcLang">Português</div>
+      <div class="fc-word" id="fcWord">—</div>
+      <button class="fc-speak" onclick="event.stopPropagation();speakFC()" title="発音">🔊</button>
+      <div class="fc-hint" id="fcHint">タップして答えを見る</div>
+    </div>
+  </div>
+  <div class="fc-nav">
+    <button class="fc-nav-btn" onclick="prevFC()">← 前へ</button>
+    <button class="fc-shuf" onclick="shuffleFC()" title="シャッフル">🔀</button>
+    <button class="fc-nav-btn" onclick="nextFC()">次へ →</button>
+  </div>
+  <button class="fc-learned-btn" onclick="markLearnedFC()">✅ 習得済みにする</button>
+</div>
+
+<div id="quizPanel" class="panel">
+  <div class="quiz-score-bar">
+    <div class="quiz-score-item">
+      <div class="quiz-score-num ok" id="qCorrect">0</div>
+      <div class="quiz-score-label">正解</div>
+    </div>
+    <div class="quiz-score-item">
+      <div class="quiz-score-num ng" id="qWrong">0</div>
+      <div class="quiz-score-label">不正解</div>
+    </div>
+    <div class="quiz-score-item">
+      <div class="quiz-score-num" id="qTotal" style="color:var(--azul)">0</div>
+      <div class="quiz-score-label">合計</div>
+    </div>
+  </div>
+  <div class="quiz-q-card">
+    <div class="quiz-qlabel" id="qLabel">Português</div>
+    <div class="quiz-qword" id="qWord">—</div>
+  </div>
+  <div class="quiz-choices" id="qChoices"></div>
+  <div class="quiz-result" id="qResult">4択から選んでください</div>
+  <button class="quiz-next-btn" id="qNextBtn" onclick="nextQuiz()">次の問題 →</button>
+</div>
+
+<!-- タブバー -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-list" onclick="setTab('list')">
+    <span class="tab-icon">☰</span><span class="tab-label">一覧</span>
+  </button>
+  <button class="tab-btn" id="tab-fc" onclick="setTab('fc')">
+    <span class="tab-icon">🃏</span><span class="tab-label">カード</span>
+  </button>
+  <button class="tab-btn" id="tab-quiz" onclick="setTab('quiz')">
+    <span class="tab-icon">❓</span><span class="tab-label">クイズ</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 単語データ =====
+const RAW=[["Olá","こんにちは","挨拶"],["Bom dia","おはようございます","挨拶"],["Boa tarde","こんにちは（午後）","挨拶"],["Boa noite","こんばんは","挨拶"],["Tchau","さようなら","挨拶"],["Até logo","またね","挨拶"],["Até amanhã","また明日","挨拶"],["Por favor","お願いします","挨拶"],["Obrigado","ありがとう（男性）","挨拶"],["Obrigada","ありがとう（女性）","挨拶"],["De nada","どういたしまして","挨拶"],["Com licença","失礼します","挨拶"],["Desculpe","すみません","挨拶"],["Sim","はい","挨拶"],["Não","いいえ","挨拶"],["Tudo bem","元気です","挨拶"],["Como vai","お元気ですか","挨拶"],["Prazer","はじめまして","挨拶"],["Bem-vindo","ようこそ","挨拶"],["Saúde","乾杯","挨拶"],["Zero","ゼロ","数字"],["Um","1","数字"],["Dois","2","数字"],["Três","3","数字"],["Quatro","4","数字"],["Cinco","5","数字"],["Seis","6","数字"],["Sete","7","数字"],["Oito","8","数字"],["Nove","9","数字"],["Dez","10","数字"],["Onze","11","数字"],["Doze","12","数字"],["Treze","13","数字"],["Catorze","14","数字"],["Quinze","15","数字"],["Vinte","20","数字"],["Trinta","30","数字"],["Quarenta","40","数字"],["Cinquenta","50","数字"],["Sessenta","60","数字"],["Setenta","70","数字"],["Oitenta","80","数字"],["Noventa","90","数字"],["Cem","100","数字"],["Mil","1000","数字"],["Primeiro","1番目","数字"],["Segundo","2番目","数字"],["Terceiro","3番目","数字"],["Último","最後の","数字"],["Hoje","今日","時間"],["Ontem","昨日","時間"],["Amanhã","明日","時間"],["Agora","今","時間"],["Depois","後で","時間"],["Antes","前に","時間"],["Sempre","いつも","時間"],["Nunca","決して〜ない","時間"],["Segunda-feira","月曜日","時間"],["Terça-feira","火曜日","時間"],["Quarta-feira","水曜日","時間"],["Quinta-feira","木曜日","時間"],["Sexta-feira","金曜日","時間"],["Sábado","土曜日","時間"],["Domingo","日曜日","時間"],["Janeiro","1月","時間"],["Fevereiro","2月","時間"],["Março","3月","時間"],["Abril","4月","時間"],["Maio","5月","時間"],["Junho","6月","時間"],["Julho","7月","時間"],["Agosto","8月","時間"],["Setembro","9月","時間"],["Outubro","10月","時間"],["Novembro","11月","時間"],["Dezembro","12月","時間"],["Manhã","朝・午前","時間"],["Tarde","午後","時間"],["Noite","夜","時間"],["Hora","時間（時）","時間"],["Minuto","分","時間"],["Semana","週","時間"],["Mês","月","時間"],["Ano","年","時間"],["Família","家族","家族"],["Pai","父","家族"],["Mãe","母","家族"],["Filho","息子","家族"],["Filha","娘","家族"],["Irmão","兄弟","家族"],["Irmã","姉妹","家族"],["Avô","祖父","家族"],["Avó","祖母","家族"],["Tio","叔父","家族"],["Tia","叔母","家族"],["Primo","いとこ（男）","家族"],["Prima","いとこ（女）","家族"],["Marido","夫","家族"],["Esposa","妻","家族"],["Namorado","彼氏","家族"],["Namorada","彼女","家族"],["Amigo","友達（男）","家族"],["Amiga","友達（女）","家族"],["Vizinho","隣人","家族"],["Homem","男性","家族"],["Mulher","女性","家族"],["Criança","子供","家族"],["Bebê","赤ちゃん","家族"],["Pessoa","人","家族"],["Cabeça","頭","体"],["Rosto","顔","体"],["Olho","目","体"],["Orelha","耳","体"],["Nariz","鼻","体"],["Boca","口","体"],["Dente","歯","体"],["Língua","舌","体"],["Pescoço","首","体"],["Ombro","肩","体"],["Braço","腕","体"],["Mão","手","体"],["Dedo","指","体"],["Peito","胸","体"],["Costas","背中","体"],["Barriga","お腹","体"],["Perna","足（脚）","体"],["Joelho","膝","体"],["Pé","足（足首以下）","体"],["Coração","心臓","体"],["Cabelo","髪","体"],["Pele","皮膚","体"],["Sangue","血","体"],["Osso","骨","体"],["Músculo","筋肉","体"],["Doença","病気","体"],["Dor","痛み","体"],["Médico","医者","体"],["Hospital","病院","体"],["Remédio","薬","体"],["Comida","食べ物","食事"],["Água","水","食事"],["Café","コーヒー","食事"],["Leite","牛乳","食事"],["Suco","ジュース","食事"],["Vinho","ワイン","食事"],["Cerveja","ビール","食事"],["Chá","お茶","食事"],["Pão","パン","食事"],["Arroz","ご飯・米","食事"],["Feijão","豆","食事"],["Carne","肉","食事"],["Frango","鶏肉","食事"],["Peixe","魚","食事"],["Ovo","卵","食事"],["Queijo","チーズ","食事"],["Manteiga","バター","食事"],["Sal","塩","食事"],["Açúcar","砂糖","食事"],["Farinha","小麦粉","食事"],["Maçã","りんご","食事"],["Banana","バナナ","食事"],["Laranja","オレンジ","食事"],["Uva","ぶどう","食事"],["Morango","いちご","食事"],["Tomate","トマト","食事"],["Alface","レタス","食事"],["Cenoura","にんじん","食事"],["Batata","じゃがいも","食事"],["Cebola","玉ねぎ","食事"],["Alho","にんにく","食事"],["Chocolate","チョコレート","食事"],["Sorvete","アイスクリーム","食事"],["Bolo","ケーキ","食事"],["Biscoito","ビスケット","食事"],["Casa","家","家"],["Apartamento","アパート","家"],["Quarto","部屋","家"],["Sala","リビング","家"],["Cozinha","台所","家"],["Banheiro","バスルーム","家"],["Janela","窓","家"],["Porta","ドア","家"],["Chão","床","家"],["Teto","天井","家"],["Parede","壁","家"],["Escada","階段","家"],["Jardim","庭","家"],["Cama","ベッド","家"],["Mesa","テーブル","家"],["Cadeira","椅子","家"],["Sofá","ソファ","家"],["Armário","クローゼット","家"],["Geladeira","冷蔵庫","家"],["Fogão","コンロ","家"],["Forno","オーブン","家"],["Televisão","テレビ","家"],["Computador","コンピュータ","家"],["Telefone","電話","家"],["Lâmpada","電球","家"],["Chave","鍵","家"],["Espelho","鏡","家"],["Toalha","タオル","家"],["Sabão","石鹸","家"],["Cidade","街・都市","場所"],["Rua","通り","場所"],["Avenida","大通り","場所"],["Praça","広場","場所"],["Parque","公園","場所"],["Escola","学校","場所"],["Universidade","大学","場所"],["Escritório","オフィス","場所"],["Loja","店","場所"],["Mercado","市場・スーパー","場所"],["Banco","銀行","場所"],["Igreja","教会","場所"],["Museu","博物館","場所"],["Cinema","映画館","場所"],["Restaurante","レストラン","場所"],["Hotel","ホテル","場所"],["Aeroporto","空港","場所"],["Estação","駅","場所"],["Farmácia","薬局","場所"],["Biblioteca","図書館","場所"],["Correio","郵便局","場所"],["Praia","ビーチ","場所"],["Montanha","山","場所"],["Rio","川","場所"],["Mar","海","場所"],["Campo","田舎・野原","場所"],["Floresta","森","場所"],["Carro","車","交通"],["Ônibus","バス","交通"],["Trem","電車","交通"],["Metrô","地下鉄","交通"],["Avião","飛行機","交通"],["Barco","船","交通"],["Bicicleta","自転車","交通"],["Moto","バイク","交通"],["Táxi","タクシー","交通"],["A pé","徒歩で","交通"],["Mapa","地図","交通"],["Passaporte","パスポート","交通"],["Bilhete","チケット","交通"],["Bagagem","荷物","交通"],["Viagem","旅行","交通"],["Direita","右","交通"],["Esquerda","左","交通"],["Em frente","前","交通"],["Atrás","後ろ","交通"],["Perto","近くに","交通"],["Longe","遠くに","交通"],["Vermelho","赤","色・形"],["Azul","青","色・形"],["Verde","緑","色・形"],["Amarelo","黄色","色・形"],["Preto","黒","色・形"],["Branco","白","色・形"],["Cinza","グレー","色・形"],["Laranja","オレンジ色","色・形"],["Rosa","ピンク","色・形"],["Roxo","紫","色・形"],["Marrom","茶色","色・形"],["Grande","大きい","色・形"],["Pequeno","小さい","色・形"],["Alto","高い・背が高い","色・形"],["Baixo","低い・背が低い","色・形"],["Comprido","長い","色・形"],["Curto","短い","色・形"],["Gordo","太った","色・形"],["Magro","痩せた","色・形"],["Redondo","丸い","色・形"],["Quadrado","四角い","色・形"],["Bom","良い","形容詞"],["Mau","悪い","形容詞"],["Bonito","美しい","形容詞"],["Feio","醜い","形容詞"],["Novo","新しい・若い","形容詞"],["Velho","古い・年老いた","形容詞"],["Rápido","速い","形容詞"],["Lento","遅い","形容詞"],["Quente","熱い・暑い","形容詞"],["Frio","冷たい・寒い","形容詞"],["Fácil","簡単な","形容詞"],["Difícil","難しい","形容詞"],["Barato","安い","形容詞"],["Caro","高い（値段）","形容詞"],["Cansado","疲れた","形容詞"],["Feliz","幸せな","形容詞"],["Triste","悲しい","形容詞"],["Doente","病気の","形容詞"],["Saudável","健康な","形容詞"],["Limpo","清潔な","形容詞"],["Sujo","汚い","形容詞"],["Cheio","いっぱいの","形容詞"],["Vazio","空の","形容詞"],["Aberto","開いている","形容詞"],["Fechado","閉まっている","形容詞"],["Forte","強い","形容詞"],["Fraco","弱い","形容詞"],["Rico","金持ちの","形容詞"],["Pobre","貧しい","形容詞"],["Importante","重要な","形容詞"],["Interessante","面白い","形容詞"],["Inteligente","賢い","形容詞"],["Com fome","お腹が空いた","形容詞"],["Com sede","喉が渇いた","形容詞"],["Perigoso","危険な","形容詞"],["Ser","〜である（本質）","動詞"],["Estar","〜である（状態）","動詞"],["Ter","持っている","動詞"],["Fazer","する・作る","動詞"],["Ir","行く","動詞"],["Vir","来る","動詞"],["Querer","〜したい","動詞"],["Poder","〜できる","動詞"],["Saber","知っている","動詞"],["Dizer","言う","動詞"],["Ver","見る","動詞"],["Ouvir","聞く","動詞"],["Falar","話す","動詞"],["Ler","読む","動詞"],["Escrever","書く","動詞"],["Comer","食べる","動詞"],["Beber","飲む","動詞"],["Dormir","寝る","動詞"],["Acordar","起きる","動詞"],["Trabalhar","働く","動詞"],["Estudar","勉強する","動詞"],["Morar","住む","動詞"],["Comprar","買う","動詞"],["Vender","売る","動詞"],["Pagar","払う","動詞"],["Dar","与える","動詞"],["Receber","受け取る","動詞"],["Abrir","開ける","動詞"],["Fechar","閉める","動詞"],["Entrar","入る","動詞"],["Sair","出る","動詞"],["Chegar","着く","動詞"],["Partir","出発する","動詞"],["Ajudar","助ける","動詞"],["Precisar","必要とする","動詞"],["Gostar","好む・好き","動詞"],["Amar","愛する","動詞"],["Odiar","憎む","動詞"],["Esperar","待つ","動詞"],["Encontrar","見つける・会う","動詞"],["Perder","失う","動詞"],["Ganhar","得る・勝つ","動詞"],["Jogar","遊ぶ","動詞"],["Correr","走る","動詞"],["Andar","歩く","動詞"],["Sentar","座る","動詞"],["Levantar","立つ","動詞"],["Colocar","置く","動詞"],["Tirar","取る","動詞"],["Lavar","洗う","動詞"],["Cozinhar","料理する","動詞"],["Limpar","掃除する","動詞"],["Ligar","電話する・つける","動詞"],["Desligar","切る・消す","動詞"],["Trazer","持ってくる","動詞"],["Levar","持っていく","動詞"],["Mostrar","見せる","動詞"],["Pensar","考える","動詞"],["Acreditar","信じる","動詞"],["Lembrar","思い出す","動詞"],["Esquecer","忘れる","動詞"],["Entender","理解する","動詞"],["Conhecer","知っている（人・場所）","動詞"],["Aprender","学ぶ","動詞"],["Ensinar","教える","動詞"],["Perguntar","質問する","動詞"],["Responder","答える","動詞"],["Chamar","呼ぶ","動詞"],["Usar","使う","動詞"],["Tentar","試みる","動詞"],["Conseguir","できる・成功する","動詞"],["Deixar","置いていく・やめる","動詞"],["Pedir","頼む","動詞"],["Começar","始める","動詞"],["Terminar","終わる","動詞"],["Continuar","続ける","動詞"],["Voltar","戻る","動詞"],["Mudar","変える","動詞"],["Acontecer","起こる","動詞"],["Sentir","感じる","動詞"],["Parecer","〜のように見える","動詞"],["Viver","生きる","動詞"],["Nascer","生まれる","動詞"],["Morrer","死ぬ","動詞"],["Nadar","泳ぐ","動詞"],["Dançar","踊る","動詞"],["Cantar","歌う","動詞"],["Tocar","弾く・触れる","動詞"],["Desenhar","描く","動詞"],["Viajar","旅行する","動詞"],["Visitar","訪れる","動詞"],["Passear","散歩する","動詞"],["Descansar","休む","動詞"],["Relaxar","リラックスする","動詞"],["Cuidar","世話をする","動詞"],["Proteger","守る","動詞"],["Melhorar","改善する","動詞"],["Aumentar","増える","動詞"],["Diminuir","減る","動詞"],["Escolher","選ぶ","動詞"],["Decidir","決める","動詞"],["Planejar","計画する","動詞"],["Organizar","整理する","動詞"],["Preparar","準備する","動詞"],["Depender","依存する","動詞"],["Salvar","救う","動詞"],["Construir","建てる","動詞"],["Sol","太陽","自然"],["Chuva","雨","自然"],["Nuvem","雲","自然"],["Vento","風","自然"],["Neve","雪","自然"],["Céu","空","自然"],["Terra","地球・土","自然"],["Fogo","火","自然"],["Luz","光","自然"],["Primavera","春","自然"],["Verão","夏","自然"],["Outono","秋","自然"],["Inverno","冬","自然"],["Estrela","星","自然"],["Lua","月","自然"],["Flor","花","自然"],["Árvore","木","自然"],["Folha","葉","自然"],["Pedra","石","自然"],["Areia","砂","自然"],["Cachorro","犬","自然"],["Gato","猫","自然"],["Pássaro","鳥","自然"],["Cavalo","馬","自然"],["Vaca","牛","自然"],["Porco","豚","自然"],["Galinha","鶏","自然"],["Inseto","虫","自然"],["Cobra","蛇","自然"],["Dinheiro","お金","買い物"],["Real","レアル（通貨）","買い物"],["Preço","値段","買い物"],["Desconto","割引","買い物"],["Troco","お釣り","買い物"],["Conta","請求書・口座","買い物"],["Cartão","カード","買い物"],["Recibo","レシート","買い物"],["Produto","製品","買い物"],["Tamanho","サイズ","買い物"],["Vendedor","販売員","買い物"],["Cliente","客","買い物"],["Supermercado","スーパー","買い物"],["Roupa","服","買い物"],["Sapato","靴","買い物"],["Bolsa","バッグ","買い物"],["Professor","先生（男）","仕事"],["Professora","先生（女）","仕事"],["Aluno","生徒（男）","仕事"],["Aluna","生徒（女）","仕事"],["Engenheiro","エンジニア","仕事"],["Advogado","弁護士","仕事"],["Cozinheiro","料理人","仕事"],["Motorista","運転手","仕事"],["Policial","警察官","仕事"],["Bombeiro","消防士","仕事"],["Funcionário","従業員","仕事"],["Chefe","上司","仕事"],["Colega","同僚","仕事"],["Reunião","会議","仕事"],["Projeto","プロジェクト","仕事"],["Salário","給料","仕事"],["Emprego","雇用・仕事","仕事"],["Férias","休暇","仕事"],["Aula","授業","仕事"],["Prova","テスト","仕事"],["Nota","成績","仕事"],["Caderno","ノート","仕事"],["Livro","本","仕事"],["Caneta","ペン","仕事"],["Eu","私","代名詞"],["Tu","あなた（親しい）","代名詞"],["Você","あなた","代名詞"],["Ele","彼","代名詞"],["Ela","彼女","代名詞"],["Nós","私たち","代名詞"],["Vocês","あなたたち","代名詞"],["Eles","彼ら","代名詞"],["Elas","彼女たち","代名詞"],["Este","これ","代名詞"],["Esse","それ","代名詞"],["Aquele","あれ","代名詞"],["Aqui","ここ","代名詞"],["Lá","あそこ","代名詞"],["Meu","私の（男）","代名詞"],["Minha","私の（女）","代名詞"],["Tudo","すべて","代名詞"],["Nada","何もない","代名詞"],["Alguém","誰か","代名詞"],["Ninguém","誰もいない","代名詞"],["Em","〜に・〜で","文法"],["De","〜から・〜の","文法"],["Para","〜のために・〜へ","文法"],["Com","〜と一緒に","文法"],["Sem","〜なしに","文法"],["Por","〜のため","文法"],["Até","〜まで","文法"],["Desde","〜以来","文法"],["Entre","〜の間","文法"],["Sobre","〜について","文法"],["E","そして","文法"],["Ou","または","文法"],["Mas","しかし","文法"],["Porque","なぜなら","文法"],["Quando","いつ","文法"],["Se","もし〜なら","文法"],["Como","どのように","文法"],["Onde","どこ","文法"],["Muito","とても","文法"],["Pouco","少し","文法"],["Mais","もっと","文法"],["Menos","より少なく","文法"],["Bem","よく","文法"],["Já","すでに","文法"],["Ainda","まだ","文法"],["Também","〜も","文法"],["Só","だけ","文法"],["Realmente","本当に","文法"],["Provavelmente","たぶん","文法"],["Finalmente","ついに","文法"],["Quanto custa","いくらですか","表現"],["Onde fica","どこにありますか","表現"],["Não entendo","わかりません","表現"],["Pode repetir","もう一度言ってください","表現"],["Não sei","知りません","表現"],["Claro","もちろん","表現"],["Que pena","残念です","表現"],["Que bom","よかったです","表現"],["Que saudade","懐かしい","表現"],["Parabéns","おめでとう","表現"],["Boa sorte","頑張って・幸運を","表現"],["Preciso de ajuda","助けが必要です","表現"],["Estou perdido","迷子です","表現"],["Com certeza","もちろん（強調）","表現"],["Talvez","たぶん","表現"],["Internet","インターネット","現代"],["Celular","携帯電話","現代"],["Aplicativo","アプリ","現代"],["Rede social","ソーシャルメディア","現代"],["Senha","パスワード","現代"],["Foto","写真","現代"],["Vídeo","動画","現代"],["Mensagem","メッセージ","現代"],["Notícia","ニュース","現代"],["Música","音楽","現代"],["Filme","映画","現代"],["Jogo","ゲーム","現代"],["Esporte","スポーツ","現代"],["Futebol","サッカー","現代"],["Academia","ジム","現代"],["Turismo","観光","現代"],["Delivery","デリバリー","現代"],["Problema","問題","名詞"],["Solução","解決","名詞"],["Ideia","アイデア","名詞"],["Sonho","夢","名詞"],["Esperança","希望","名詞"],["Medo","恐怖","名詞"],["Alegria","喜び","名詞"],["Tristeza","悲しみ","名詞"],["Amor","愛","名詞"],["Paz","平和","名詞"],["Guerra","戦争","名詞"],["Liberdade","自由","名詞"],["Governo","政府","名詞"],["País","国","名詞"],["Cultura","文化","名詞"],["História","歴史・物語","名詞"],["Arte","芸術","名詞"],["Ciência","科学","名詞"],["Tecnologia","技術","名詞"],["Verdade","真実","名詞"],["Mentira","嘘","名詞"],["Segredo","秘密","名詞"],["Acidente","事故","名詞"],["Perigo","危険","名詞"],["Segurança","安全","名詞"],["Lei","法律","名詞"],["Direito","権利","名詞"],["Responsabilidade","責任","名詞"],["Tempo","天気・時間","名詞"],["Calor","暑さ","名詞"]];
+
+const WORDS = RAW.map((r,i)=>({id:i,pt:r[0],jp:r[1],cat:r[2],learned:false}));
+const CATS = ["すべて",...new Set(WORDS.map(w=>w.cat))];
+
+// ===== 状態 =====
+const S={cat:"すべて",search:"",dir:"pt-jp",tab:"list",page:1,perPage:25,
+  fcList:[],fcIdx:0,fcSide:"front",
+  qCorrect:0,qWrong:0,qWord:null,qAnswered:false,
+  learned:new Set()};
+
+try{const sv=JSON.parse(localStorage.getItem("ptjp2_learned")||"[]");S.learned=new Set(sv);WORDS.forEach(w=>{if(S.learned.has(w.id))w.learned=true;});}catch(e){}
+function saveLearned(){try{localStorage.setItem("ptjp2_learned",JSON.stringify([...S.learned]));}catch(e){}}
+
+function filtered(){
+  let ws=WORDS;
+  if(S.cat!=="すべて")ws=ws.filter(w=>w.cat===S.cat);
+  if(S.search.trim()){const q=S.search.toLowerCase();ws=ws.filter(w=>w.pt.toLowerCase().includes(q)||w.jp.includes(q));}
+  return ws;
+}
+
+// ===== 発音 =====
+function speak(text,lang){
+  if(!window.speechSynthesis){showToast("音声未対応のブラウザです");return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.85;
+  speechSynthesis.speak(u);
+}
+
+// ===== トースト =====
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+// ===== カテゴリ =====
+function renderCats(){
+  document.getElementById("catList").innerHTML=
+    CATS.map(c=>`<button class="cat-btn${S.cat===c?" active":""}" onclick="selCat(${JSON.stringify(c)})">${c}</button>`).join("");
+}
+function selCat(c){S.cat=c;S.page=1;renderCats();renderList();updateStats();initFC();if(S.tab==="quiz")initQuiz();}
+
+// ===== 統計 =====
+function updateStats(){
+  const fw=filtered();
+  document.getElementById("totalCnt").textContent=WORDS.length;
+  document.getElementById("showCnt").textContent=fw.length;
+  document.getElementById("learnCnt").textContent=S.learned.size;
+}
+
+// ===== 方向 =====
+function setDir(d){
+  S.dir=d;
+  document.getElementById("dPJ").classList.toggle("active",d==="pt-jp");
+  document.getElementById("dJP").classList.toggle("active",d==="jp-pt");
+  renderList();renderFC();
+}
+
+// ===== タブ =====
+function setTab(t){
+  S.tab=t;
+  ["list","fc","quiz"].forEach(id=>{
+    const panel=document.getElementById(id==="list"?"listPanel":id==="fc"?"fcPanel":"quizPanel");
+    const btn=document.getElementById("tab-"+id);
+    const active=(id===t)||(t==="fc"&&id==="fc")||(t==="quiz"&&id==="quiz")||(t==="list"&&id==="list");
+    panel.classList.toggle("active",active);
+    btn.classList.toggle("active",active);
+  });
+  if(t==="fc")initFC();
+  if(t==="quiz")initQuiz();
+}
+
+// ===== 一覧 =====
+function renderList(){
+  const fw=filtered();
+  const tp=Math.max(1,Math.ceil(fw.length/S.perPage));
+  if(S.page>tp)S.page=1;
+  const st=(S.page-1)*S.perPage;
+  const sl=fw.slice(st,st+S.perPage);
+
+  document.getElementById("wordList").innerHTML=sl.map((w,i)=>{
+    const num=st+i+1;
+    const front=S.dir==="pt-jp"?w.pt:w.jp;
+    const back=S.dir==="pt-jp"?w.jp:w.pt;
+    return`<div class="word-item${w.learned?" learned":""}">
+      <div class="w-num">${num}</div>
+      <div class="w-front">${front}</div>
+      <div class="w-back">${back}</div>
+      <div class="w-actions">
+        <button class="w-act-btn" onclick="speak('${w.pt.replace(/'/g,"\\'")}','pt-BR')" title="発音">🔊</button>
+        <button class="w-act-btn" onclick="togLearn(${w.id})">${w.learned?"✅":"⬜"}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  // ページネーション
+  let h="";
+  if(tp>1){
+    h+=`<button class="pag-btn" onclick="goPage(${S.page-1})" ${S.page===1?"disabled":""}>‹</button>`;
+    for(let p=1;p<=tp;p++){
+      if(p===1||p===tp||Math.abs(p-S.page)<=1)
+        h+=`<button class="pag-btn${p===S.page?" active":""}" onclick="goPage(${p})">${p}</button>`;
+      else if(Math.abs(p-S.page)===2)h+=`<span style="color:var(--borda);padding:0 2px">…</span>`;
+    }
+    h+=`<button class="pag-btn" onclick="goPage(${S.page+1})" ${S.page===tp?"disabled":""}>›</button>`;
+  }
+  document.getElementById("pagWrap").innerHTML=h;
+}
+
+function goPage(p){
+  const tp=Math.ceil(filtered().length/S.perPage);
+  if(p<1||p>tp)return;
+  S.page=p;renderList();
+  document.getElementById("listPanel").scrollTop=0;
+}
+
+function togLearn(id){
+  const w=WORDS[id];w.learned=!w.learned;
+  if(w.learned)S.learned.add(id);else S.learned.delete(id);
+  saveLearned();updateStats();renderList();
+}
+
+// ===== フラッシュカード =====
+function initFC(){
+  S.fcList=[...filtered()];S.fcIdx=0;S.fcSide="front";renderFC();
+}
+
+function renderFC(){
+  const w=S.fcList[S.fcIdx];
+  if(!w){
+    document.getElementById("fcWord").textContent="該当なし";
+    document.getElementById("fcLang").textContent="";
+    document.getElementById("fcBadge").textContent="—";
+    document.getElementById("fcCounter").textContent="0/0";
+    document.getElementById("fcProg").style.width="0%";
+    return;
+  }
+  const isFront=S.fcSide==="front";
+  const isPtFirst=S.dir==="pt-jp";
+  document.getElementById("fcWord").textContent=isFront?(isPtFirst?w.pt:w.jp):(isPtFirst?w.jp:w.pt);
+  document.getElementById("fcLang").textContent=isFront?(isPtFirst?"Português":"日本語"):(isPtFirst?"日本語":"Português");
+  document.getElementById("fcBadge").textContent=w.cat;
+  document.getElementById("fcHint").textContent=isFront?"タップして答えを見る":"タップで戻る";
+  document.getElementById("fcCard").classList.toggle("back",!isFront);
+  const total=S.fcList.length;
+  document.getElementById("fcCounter").textContent=`${S.fcIdx+1}/${total}`;
+  document.getElementById("fcProg").style.width=`${((S.fcIdx+1)/total)*100}%`;
+}
+
+function flipCard(){S.fcSide=S.fcSide==="front"?"back":"front";renderFC();}
+function nextFC(){if(S.fcIdx<S.fcList.length-1){S.fcIdx++;S.fcSide="front";renderFC();}else showToast("🎉 最後のカードです！");}
+function prevFC(){if(S.fcIdx>0){S.fcIdx--;S.fcSide="front";renderFC();}}
+
+function shuffleFC(){
+  for(let i=S.fcList.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[S.fcList[i],S.fcList[j]]=[S.fcList[j],S.fcList[i]];}
+  S.fcIdx=0;S.fcSide="front";renderFC();showToast("🔀 シャッフルしました！");
+}
+
+function speakFC(){
+  const w=S.fcList[S.fcIdx];if(!w)return;
+  const isFront=S.fcSide==="front";
+  const isPtFirst=S.dir==="pt-jp";
+  if(isFront)speak(isPtFirst?w.pt:w.jp,isPtFirst?"pt-BR":"ja-JP");
+  else speak(isPtFirst?w.jp:w.pt,isPtFirst?"ja-JP":"pt-BR");
+}
+
+function markLearnedFC(){
+  const w=S.fcList[S.fcIdx];if(!w)return;
+  w.learned=true;S.learned.add(w.id);saveLearned();updateStats();
+  showToast("✅ 習得済みにしました！");
+  setTimeout(()=>nextFC(),400);
+}
+
+// ===== クイズ =====
+let qPool=[];
+function initQuiz(){
+  S.qCorrect=0;S.qWrong=0;S.qAnswered=false;
+  qPool=[...filtered()];
+  shuffle(qPool);
+  document.getElementById("qCorrect").textContent=0;
+  document.getElementById("qWrong").textContent=0;
+  document.getElementById("qTotal").textContent=0;
+  nextQuiz();
+}
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+function nextQuiz(){
+  if(qPool.length===0)qPool=[...filtered()],shuffle(qPool);
+  S.qWord=qPool.pop();
+  S.qAnswered=false;
+  const isPtFirst=S.dir==="pt-jp";
+  document.getElementById("qLabel").textContent=isPtFirst?"Português":"日本語";
+  document.getElementById("qWord").textContent=isPtFirst?S.qWord.pt:S.qWord.jp;
+  document.getElementById("qResult").textContent="4択から選んでください";
+  document.getElementById("qResult").className="quiz-result";
+  document.getElementById("qNextBtn").style.display="none";
+
+  // 選択肢（正解1 + ランダム3）
+  const all=filtered().filter(w=>w.id!==S.qWord.id);
+  shuffle(all);
+  const choices=[S.qWord,...all.slice(0,3)];
+  shuffle(choices);
+
+  document.getElementById("qChoices").innerHTML=choices.map(c=>{
+    const txt=isPtFirst?c.jp:c.pt;
+    return`<button class="quiz-choice" onclick="answerQuiz(${c.id})">${txt}</button>`;
+  }).join("");
+}
+
+function answerQuiz(id){
+  if(S.qAnswered)return;
+  S.qAnswered=true;
+  const correct=(id===S.qWord.id);
+  if(correct)S.qCorrect++;else S.qWrong++;
+  document.getElementById("qCorrect").textContent=S.qCorrect;
+  document.getElementById("qWrong").textContent=S.qWrong;
+  document.getElementById("qTotal").textContent=S.qCorrect+S.qWrong;
+
+  const btns=document.querySelectorAll(".quiz-choice");
+  btns.forEach(b=>{
+    b.classList.add("disabled");
+    const isPtFirst=S.dir==="pt-jp";
+    const txt=b.textContent;
+    const isCorrectBtn=(isPtFirst?S.qWord.jp:S.qWord.pt)===txt;
+    if(isCorrectBtn)b.classList.add("correct");
+    else if(b===document.querySelector(`.quiz-choice:nth-child(${[...btns].indexOf(b)+1})`)){}
+  });
+  // 正解ボタンを緑に
+  btns.forEach(b=>{
+    const isPtFirst=S.dir==="pt-jp";
+    if(b.textContent===(isPtFirst?S.qWord.jp:S.qWord.pt))b.classList.add("correct");
+  });
+
+  const res=document.getElementById("qResult");
+  if(correct){res.textContent="⭕ 正解！";res.className="quiz-result ok";}
+  else{const ans=S.dir==="pt-jp"?S.qWord.jp:S.qWord.pt;res.textContent=`❌ 不正解 → 正解は「${ans}」`;res.className="quiz-result ng";}
+  document.getElementById("qNextBtn").style.display="";
+
+  // 発音
+  speak(S.qWord.pt,"pt-BR");
+}
+
+// ===== PWAインストール =====
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById("installBanner").classList.remove("hidden");
+});
+document.getElementById("installBtn").addEventListener("click",()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(r=>{
+    deferredPrompt=null;
+    document.getElementById("installBanner").classList.add("hidden");
+    if(r.outcome==="accepted")showToast("📲 インストールしました！");
+  });
+});
+document.getElementById("installX").addEventListener("click",()=>{
+  document.getElementById("installBanner").classList.add("hidden");
+});
+
+// ===== 検索 =====
+document.getElementById("searchInput").addEventListener("input",function(){
+  S.search=this.value;S.page=1;renderList();updateStats();
+  if(S.tab==="fc")initFC();
+  if(S.tab==="quiz")initQuiz();
+});
+
+// ===== キーボード（スワイプ風） =====
+let touchX=0;
+document.addEventListener("touchstart",e=>{touchX=e.touches[0].clientX;},{passive:true});
+document.addEventListener("touchend",e=>{
+  if(S.tab!=="fc")return;
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>60){if(dx<0)nextFC();else prevFC();}
+},{passive:true});
+
+// ===== Service Worker =====
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").then(()=>console.log("SW registered")).catch(()=>{});
+}
+
+// ===== 初期化 =====
+renderCats();renderList();updateStats();initFC();initQuiz();
+</script>
+</body>
+</html>
