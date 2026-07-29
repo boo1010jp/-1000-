@@ -368,14 +368,14 @@ body {
 <!-- インストールバナー -->
 <div class="install-banner hidden" id="installBanner">
   <span>📲</span>
-  <span>ホーム画面に追加してアプリとして使えます</span>
+  <span>Adicione à tela inicial para usar como app</span>
   <button id="installBtn">追加</button>
   <button class="install-x" id="installX">✕</button>
 </div>
 
 <!-- ヘッダー -->
 <div class="app-header">
-  <div class="app-title">PT<span>語</span>単語帳</div>
+  <div class="app-title" id="appTitle">PT<span>語</span>単語帳</div>
   <input class="header-search" type="search" id="searchInput" placeholder="🔍 検索…">
 </div>
 
@@ -384,8 +384,8 @@ body {
 
 <!-- 統計バー -->
 <div class="stats-bar">
-  <span>全 <strong id="totalCnt">—</strong> 語</span>
-  <span>表示 <strong id="showCnt">—</strong></span>
+  <span id="lblTotal">Total <strong id="totalCnt">—</strong> 語</span>
+  <span id="lblShow">表示 <strong id="showCnt">—</strong></span>
   <span>✅ <strong id="learnCnt">0</strong></span>
   <div class="dir-toggle">
     <button class="dir-btn active" id="dPJ" onclick="setDir('pt-jp')">PT→JP</button>
@@ -410,30 +410,30 @@ body {
       <div class="fc-lang" id="fcLang">Português</div>
       <div class="fc-word" id="fcWord">—</div>
       <button class="fc-speak" onclick="event.stopPropagation();speakFC()" title="発音">🔊</button>
-      <div class="fc-hint" id="fcHint">タップして答えを見る</div>
+      <div class="fc-hint" id="fcHint">Toque para ver a resposta</div>
     </div>
   </div>
   <div class="fc-nav">
-    <button class="fc-nav-btn" onclick="prevFC()">← 前へ</button>
+    <button class="fc-nav-btn" id="btnPrev" onclick="prevFC()">← 前へ</button>
     <button class="fc-shuf" onclick="shuffleFC()" title="シャッフル">🔀</button>
-    <button class="fc-nav-btn" onclick="nextFC()">次へ →</button>
+    <button class="fc-nav-btn" id="btnNext" onclick="nextFC()">次へ →</button>
   </div>
-  <button class="fc-learned-btn" onclick="markLearnedFC()">✅ 習得済みにする</button>
+  <button class="fc-learned-btn" id="btnLearned" onclick="markLearnedFC()">✅ 習得済みにする</button>
 </div>
 
 <div id="quizPanel" class="panel">
   <div class="quiz-score-bar">
     <div class="quiz-score-item">
       <div class="quiz-score-num ok" id="qCorrect">0</div>
-      <div class="quiz-score-label">正解</div>
+      <div class="quiz-score-label">Acertos</div>
     </div>
     <div class="quiz-score-item">
       <div class="quiz-score-num ng" id="qWrong">0</div>
-      <div class="quiz-score-label">不正解</div>
+      <div class="quiz-score-label">Erros</div>
     </div>
     <div class="quiz-score-item">
       <div class="quiz-score-num" id="qTotal" style="color:var(--azul)">0</div>
-      <div class="quiz-score-label">合計</div>
+      <div class="quiz-score-label">Total</div>
     </div>
   </div>
   <div class="quiz-q-card">
@@ -448,13 +448,13 @@ body {
 <!-- タブバー -->
 <div class="tab-bar">
   <button class="tab-btn active" id="tab-list" onclick="setTab('list')">
-    <span class="tab-icon">☰</span><span class="tab-label">一覧</span>
+    <span class="tab-icon">☰</span><span class="tab-label" id="tlList">一覧</span>
   </button>
   <button class="tab-btn" id="tab-fc" onclick="setTab('fc')">
-    <span class="tab-icon">🃏</span><span class="tab-label">カード</span>
+    <span class="tab-icon">🃏</span><span class="tab-label" id="tlCard">カード</span>
   </button>
   <button class="tab-btn" id="tab-quiz" onclick="setTab('quiz')">
-    <span class="tab-icon">❓</span><span class="tab-label">クイズ</span>
+    <span class="tab-icon">❓</span><span class="tab-label" id="tlQuiz">クイズ</span>
   </button>
 </div>
 
@@ -462,13 +462,13 @@ body {
 
 <script>
 // ===== 単語データ =====
-const RAW=[["Olá","こんにちは","挨拶"],["Bom dia","おはようございます","挨拶"],["Boa tarde","こんにちは（午後）","挨拶"],["Boa noite","こんばんは","挨拶"],["Tchau","さようなら","挨拶"],["Até logo","またね","挨拶"],["Até amanhã","また明日","挨拶"],["Por favor","お願いします","挨拶"],["Obrigado","ありがとう（男性）","挨拶"],["Obrigada","ありがとう（女性）","挨拶"],["De nada","どういたしまして","挨拶"],["Com licença","失礼します","挨拶"],["Desculpe","すみません","挨拶"],["Sim","はい","挨拶"],["Não","いいえ","挨拶"],["Tudo bem","元気です","挨拶"],["Como vai","お元気ですか","挨拶"],["Prazer","はじめまして","挨拶"],["Bem-vindo","ようこそ","挨拶"],["Saúde","乾杯","挨拶"],["Zero","ゼロ","数字"],["Um","1","数字"],["Dois","2","数字"],["Três","3","数字"],["Quatro","4","数字"],["Cinco","5","数字"],["Seis","6","数字"],["Sete","7","数字"],["Oito","8","数字"],["Nove","9","数字"],["Dez","10","数字"],["Onze","11","数字"],["Doze","12","数字"],["Treze","13","数字"],["Catorze","14","数字"],["Quinze","15","数字"],["Vinte","20","数字"],["Trinta","30","数字"],["Quarenta","40","数字"],["Cinquenta","50","数字"],["Sessenta","60","数字"],["Setenta","70","数字"],["Oitenta","80","数字"],["Noventa","90","数字"],["Cem","100","数字"],["Mil","1000","数字"],["Primeiro","1番目","数字"],["Segundo","2番目","数字"],["Terceiro","3番目","数字"],["Último","最後の","数字"],["Hoje","今日","時間"],["Ontem","昨日","時間"],["Amanhã","明日","時間"],["Agora","今","時間"],["Depois","後で","時間"],["Antes","前に","時間"],["Sempre","いつも","時間"],["Nunca","決して〜ない","時間"],["Segunda-feira","月曜日","時間"],["Terça-feira","火曜日","時間"],["Quarta-feira","水曜日","時間"],["Quinta-feira","木曜日","時間"],["Sexta-feira","金曜日","時間"],["Sábado","土曜日","時間"],["Domingo","日曜日","時間"],["Janeiro","1月","時間"],["Fevereiro","2月","時間"],["Março","3月","時間"],["Abril","4月","時間"],["Maio","5月","時間"],["Junho","6月","時間"],["Julho","7月","時間"],["Agosto","8月","時間"],["Setembro","9月","時間"],["Outubro","10月","時間"],["Novembro","11月","時間"],["Dezembro","12月","時間"],["Manhã","朝・午前","時間"],["Tarde","午後","時間"],["Noite","夜","時間"],["Hora","時間（時）","時間"],["Minuto","分","時間"],["Semana","週","時間"],["Mês","月","時間"],["Ano","年","時間"],["Família","家族","家族"],["Pai","父","家族"],["Mãe","母","家族"],["Filho","息子","家族"],["Filha","娘","家族"],["Irmão","兄弟","家族"],["Irmã","姉妹","家族"],["Avô","祖父","家族"],["Avó","祖母","家族"],["Tio","叔父","家族"],["Tia","叔母","家族"],["Primo","いとこ（男）","家族"],["Prima","いとこ（女）","家族"],["Marido","夫","家族"],["Esposa","妻","家族"],["Namorado","彼氏","家族"],["Namorada","彼女","家族"],["Amigo","友達（男）","家族"],["Amiga","友達（女）","家族"],["Vizinho","隣人","家族"],["Homem","男性","家族"],["Mulher","女性","家族"],["Criança","子供","家族"],["Bebê","赤ちゃん","家族"],["Pessoa","人","家族"],["Cabeça","頭","体"],["Rosto","顔","体"],["Olho","目","体"],["Orelha","耳","体"],["Nariz","鼻","体"],["Boca","口","体"],["Dente","歯","体"],["Língua","舌","体"],["Pescoço","首","体"],["Ombro","肩","体"],["Braço","腕","体"],["Mão","手","体"],["Dedo","指","体"],["Peito","胸","体"],["Costas","背中","体"],["Barriga","お腹","体"],["Perna","足（脚）","体"],["Joelho","膝","体"],["Pé","足（足首以下）","体"],["Coração","心臓","体"],["Cabelo","髪","体"],["Pele","皮膚","体"],["Sangue","血","体"],["Osso","骨","体"],["Músculo","筋肉","体"],["Doença","病気","体"],["Dor","痛み","体"],["Médico","医者","体"],["Hospital","病院","体"],["Remédio","薬","体"],["Comida","食べ物","食事"],["Água","水","食事"],["Café","コーヒー","食事"],["Leite","牛乳","食事"],["Suco","ジュース","食事"],["Vinho","ワイン","食事"],["Cerveja","ビール","食事"],["Chá","お茶","食事"],["Pão","パン","食事"],["Arroz","ご飯・米","食事"],["Feijão","豆","食事"],["Carne","肉","食事"],["Frango","鶏肉","食事"],["Peixe","魚","食事"],["Ovo","卵","食事"],["Queijo","チーズ","食事"],["Manteiga","バター","食事"],["Sal","塩","食事"],["Açúcar","砂糖","食事"],["Farinha","小麦粉","食事"],["Maçã","りんご","食事"],["Banana","バナナ","食事"],["Laranja","オレンジ","食事"],["Uva","ぶどう","食事"],["Morango","いちご","食事"],["Tomate","トマト","食事"],["Alface","レタス","食事"],["Cenoura","にんじん","食事"],["Batata","じゃがいも","食事"],["Cebola","玉ねぎ","食事"],["Alho","にんにく","食事"],["Chocolate","チョコレート","食事"],["Sorvete","アイスクリーム","食事"],["Bolo","ケーキ","食事"],["Biscoito","ビスケット","食事"],["Casa","家","家"],["Apartamento","アパート","家"],["Quarto","部屋","家"],["Sala","リビング","家"],["Cozinha","台所","家"],["Banheiro","バスルーム","家"],["Janela","窓","家"],["Porta","ドア","家"],["Chão","床","家"],["Teto","天井","家"],["Parede","壁","家"],["Escada","階段","家"],["Jardim","庭","家"],["Cama","ベッド","家"],["Mesa","テーブル","家"],["Cadeira","椅子","家"],["Sofá","ソファ","家"],["Armário","クローゼット","家"],["Geladeira","冷蔵庫","家"],["Fogão","コンロ","家"],["Forno","オーブン","家"],["Televisão","テレビ","家"],["Computador","コンピュータ","家"],["Telefone","電話","家"],["Lâmpada","電球","家"],["Chave","鍵","家"],["Espelho","鏡","家"],["Toalha","タオル","家"],["Sabão","石鹸","家"],["Cidade","街・都市","場所"],["Rua","通り","場所"],["Avenida","大通り","場所"],["Praça","広場","場所"],["Parque","公園","場所"],["Escola","学校","場所"],["Universidade","大学","場所"],["Escritório","オフィス","場所"],["Loja","店","場所"],["Mercado","市場・スーパー","場所"],["Banco","銀行","場所"],["Igreja","教会","場所"],["Museu","博物館","場所"],["Cinema","映画館","場所"],["Restaurante","レストラン","場所"],["Hotel","ホテル","場所"],["Aeroporto","空港","場所"],["Estação","駅","場所"],["Farmácia","薬局","場所"],["Biblioteca","図書館","場所"],["Correio","郵便局","場所"],["Praia","ビーチ","場所"],["Montanha","山","場所"],["Rio","川","場所"],["Mar","海","場所"],["Campo","田舎・野原","場所"],["Floresta","森","場所"],["Carro","車","交通"],["Ônibus","バス","交通"],["Trem","電車","交通"],["Metrô","地下鉄","交通"],["Avião","飛行機","交通"],["Barco","船","交通"],["Bicicleta","自転車","交通"],["Moto","バイク","交通"],["Táxi","タクシー","交通"],["A pé","徒歩で","交通"],["Mapa","地図","交通"],["Passaporte","パスポート","交通"],["Bilhete","チケット","交通"],["Bagagem","荷物","交通"],["Viagem","旅行","交通"],["Direita","右","交通"],["Esquerda","左","交通"],["Em frente","前","交通"],["Atrás","後ろ","交通"],["Perto","近くに","交通"],["Longe","遠くに","交通"],["Vermelho","赤","色・形"],["Azul","青","色・形"],["Verde","緑","色・形"],["Amarelo","黄色","色・形"],["Preto","黒","色・形"],["Branco","白","色・形"],["Cinza","グレー","色・形"],["Laranja","オレンジ色","色・形"],["Rosa","ピンク","色・形"],["Roxo","紫","色・形"],["Marrom","茶色","色・形"],["Grande","大きい","色・形"],["Pequeno","小さい","色・形"],["Alto","高い・背が高い","色・形"],["Baixo","低い・背が低い","色・形"],["Comprido","長い","色・形"],["Curto","短い","色・形"],["Gordo","太った","色・形"],["Magro","痩せた","色・形"],["Redondo","丸い","色・形"],["Quadrado","四角い","色・形"],["Bom","良い","形容詞"],["Mau","悪い","形容詞"],["Bonito","美しい","形容詞"],["Feio","醜い","形容詞"],["Novo","新しい・若い","形容詞"],["Velho","古い・年老いた","形容詞"],["Rápido","速い","形容詞"],["Lento","遅い","形容詞"],["Quente","熱い・暑い","形容詞"],["Frio","冷たい・寒い","形容詞"],["Fácil","簡単な","形容詞"],["Difícil","難しい","形容詞"],["Barato","安い","形容詞"],["Caro","高い（値段）","形容詞"],["Cansado","疲れた","形容詞"],["Feliz","幸せな","形容詞"],["Triste","悲しい","形容詞"],["Doente","病気の","形容詞"],["Saudável","健康な","形容詞"],["Limpo","清潔な","形容詞"],["Sujo","汚い","形容詞"],["Cheio","いっぱいの","形容詞"],["Vazio","空の","形容詞"],["Aberto","開いている","形容詞"],["Fechado","閉まっている","形容詞"],["Forte","強い","形容詞"],["Fraco","弱い","形容詞"],["Rico","金持ちの","形容詞"],["Pobre","貧しい","形容詞"],["Importante","重要な","形容詞"],["Interessante","面白い","形容詞"],["Inteligente","賢い","形容詞"],["Com fome","お腹が空いた","形容詞"],["Com sede","喉が渇いた","形容詞"],["Perigoso","危険な","形容詞"],["Ser","〜である（本質）","動詞"],["Estar","〜である（状態）","動詞"],["Ter","持っている","動詞"],["Fazer","する・作る","動詞"],["Ir","行く","動詞"],["Vir","来る","動詞"],["Querer","〜したい","動詞"],["Poder","〜できる","動詞"],["Saber","知っている","動詞"],["Dizer","言う","動詞"],["Ver","見る","動詞"],["Ouvir","聞く","動詞"],["Falar","話す","動詞"],["Ler","読む","動詞"],["Escrever","書く","動詞"],["Comer","食べる","動詞"],["Beber","飲む","動詞"],["Dormir","寝る","動詞"],["Acordar","起きる","動詞"],["Trabalhar","働く","動詞"],["Estudar","勉強する","動詞"],["Morar","住む","動詞"],["Comprar","買う","動詞"],["Vender","売る","動詞"],["Pagar","払う","動詞"],["Dar","与える","動詞"],["Receber","受け取る","動詞"],["Abrir","開ける","動詞"],["Fechar","閉める","動詞"],["Entrar","入る","動詞"],["Sair","出る","動詞"],["Chegar","着く","動詞"],["Partir","出発する","動詞"],["Ajudar","助ける","動詞"],["Precisar","必要とする","動詞"],["Gostar","好む・好き","動詞"],["Amar","愛する","動詞"],["Odiar","憎む","動詞"],["Esperar","待つ","動詞"],["Encontrar","見つける・会う","動詞"],["Perder","失う","動詞"],["Ganhar","得る・勝つ","動詞"],["Jogar","遊ぶ","動詞"],["Correr","走る","動詞"],["Andar","歩く","動詞"],["Sentar","座る","動詞"],["Levantar","立つ","動詞"],["Colocar","置く","動詞"],["Tirar","取る","動詞"],["Lavar","洗う","動詞"],["Cozinhar","料理する","動詞"],["Limpar","掃除する","動詞"],["Ligar","電話する・つける","動詞"],["Desligar","切る・消す","動詞"],["Trazer","持ってくる","動詞"],["Levar","持っていく","動詞"],["Mostrar","見せる","動詞"],["Pensar","考える","動詞"],["Acreditar","信じる","動詞"],["Lembrar","思い出す","動詞"],["Esquecer","忘れる","動詞"],["Entender","理解する","動詞"],["Conhecer","知っている（人・場所）","動詞"],["Aprender","学ぶ","動詞"],["Ensinar","教える","動詞"],["Perguntar","質問する","動詞"],["Responder","答える","動詞"],["Chamar","呼ぶ","動詞"],["Usar","使う","動詞"],["Tentar","試みる","動詞"],["Conseguir","できる・成功する","動詞"],["Deixar","置いていく・やめる","動詞"],["Pedir","頼む","動詞"],["Começar","始める","動詞"],["Terminar","終わる","動詞"],["Continuar","続ける","動詞"],["Voltar","戻る","動詞"],["Mudar","変える","動詞"],["Acontecer","起こる","動詞"],["Sentir","感じる","動詞"],["Parecer","〜のように見える","動詞"],["Viver","生きる","動詞"],["Nascer","生まれる","動詞"],["Morrer","死ぬ","動詞"],["Nadar","泳ぐ","動詞"],["Dançar","踊る","動詞"],["Cantar","歌う","動詞"],["Tocar","弾く・触れる","動詞"],["Desenhar","描く","動詞"],["Viajar","旅行する","動詞"],["Visitar","訪れる","動詞"],["Passear","散歩する","動詞"],["Descansar","休む","動詞"],["Relaxar","リラックスする","動詞"],["Cuidar","世話をする","動詞"],["Proteger","守る","動詞"],["Melhorar","改善する","動詞"],["Aumentar","増える","動詞"],["Diminuir","減る","動詞"],["Escolher","選ぶ","動詞"],["Decidir","決める","動詞"],["Planejar","計画する","動詞"],["Organizar","整理する","動詞"],["Preparar","準備する","動詞"],["Depender","依存する","動詞"],["Salvar","救う","動詞"],["Construir","建てる","動詞"],["Sol","太陽","自然"],["Chuva","雨","自然"],["Nuvem","雲","自然"],["Vento","風","自然"],["Neve","雪","自然"],["Céu","空","自然"],["Terra","地球・土","自然"],["Fogo","火","自然"],["Luz","光","自然"],["Primavera","春","自然"],["Verão","夏","自然"],["Outono","秋","自然"],["Inverno","冬","自然"],["Estrela","星","自然"],["Lua","月","自然"],["Flor","花","自然"],["Árvore","木","自然"],["Folha","葉","自然"],["Pedra","石","自然"],["Areia","砂","自然"],["Cachorro","犬","自然"],["Gato","猫","自然"],["Pássaro","鳥","自然"],["Cavalo","馬","自然"],["Vaca","牛","自然"],["Porco","豚","自然"],["Galinha","鶏","自然"],["Inseto","虫","自然"],["Cobra","蛇","自然"],["Dinheiro","お金","買い物"],["Real","レアル（通貨）","買い物"],["Preço","値段","買い物"],["Desconto","割引","買い物"],["Troco","お釣り","買い物"],["Conta","請求書・口座","買い物"],["Cartão","カード","買い物"],["Recibo","レシート","買い物"],["Produto","製品","買い物"],["Tamanho","サイズ","買い物"],["Vendedor","販売員","買い物"],["Cliente","客","買い物"],["Supermercado","スーパー","買い物"],["Roupa","服","買い物"],["Sapato","靴","買い物"],["Bolsa","バッグ","買い物"],["Professor","先生（男）","仕事"],["Professora","先生（女）","仕事"],["Aluno","生徒（男）","仕事"],["Aluna","生徒（女）","仕事"],["Engenheiro","エンジニア","仕事"],["Advogado","弁護士","仕事"],["Cozinheiro","料理人","仕事"],["Motorista","運転手","仕事"],["Policial","警察官","仕事"],["Bombeiro","消防士","仕事"],["Funcionário","従業員","仕事"],["Chefe","上司","仕事"],["Colega","同僚","仕事"],["Reunião","会議","仕事"],["Projeto","プロジェクト","仕事"],["Salário","給料","仕事"],["Emprego","雇用・仕事","仕事"],["Férias","休暇","仕事"],["Aula","授業","仕事"],["Prova","テスト","仕事"],["Nota","成績","仕事"],["Caderno","ノート","仕事"],["Livro","本","仕事"],["Caneta","ペン","仕事"],["Eu","私","代名詞"],["Tu","あなた（親しい）","代名詞"],["Você","あなた","代名詞"],["Ele","彼","代名詞"],["Ela","彼女","代名詞"],["Nós","私たち","代名詞"],["Vocês","あなたたち","代名詞"],["Eles","彼ら","代名詞"],["Elas","彼女たち","代名詞"],["Este","これ","代名詞"],["Esse","それ","代名詞"],["Aquele","あれ","代名詞"],["Aqui","ここ","代名詞"],["Lá","あそこ","代名詞"],["Meu","私の（男）","代名詞"],["Minha","私の（女）","代名詞"],["Tudo","すべて","代名詞"],["Nada","何もない","代名詞"],["Alguém","誰か","代名詞"],["Ninguém","誰もいない","代名詞"],["Em","〜に・〜で","文法"],["De","〜から・〜の","文法"],["Para","〜のために・〜へ","文法"],["Com","〜と一緒に","文法"],["Sem","〜なしに","文法"],["Por","〜のため","文法"],["Até","〜まで","文法"],["Desde","〜以来","文法"],["Entre","〜の間","文法"],["Sobre","〜について","文法"],["E","そして","文法"],["Ou","または","文法"],["Mas","しかし","文法"],["Porque","なぜなら","文法"],["Quando","いつ","文法"],["Se","もし〜なら","文法"],["Como","どのように","文法"],["Onde","どこ","文法"],["Muito","とても","文法"],["Pouco","少し","文法"],["Mais","もっと","文法"],["Menos","より少なく","文法"],["Bem","よく","文法"],["Já","すでに","文法"],["Ainda","まだ","文法"],["Também","〜も","文法"],["Só","だけ","文法"],["Realmente","本当に","文法"],["Provavelmente","たぶん","文法"],["Finalmente","ついに","文法"],["Quanto custa","いくらですか","表現"],["Onde fica","どこにありますか","表現"],["Não entendo","わかりません","表現"],["Pode repetir","もう一度言ってください","表現"],["Não sei","知りません","表現"],["Claro","もちろん","表現"],["Que pena","残念です","表現"],["Que bom","よかったです","表現"],["Que saudade","懐かしい","表現"],["Parabéns","おめでとう","表現"],["Boa sorte","頑張って・幸運を","表現"],["Preciso de ajuda","助けが必要です","表現"],["Estou perdido","迷子です","表現"],["Com certeza","もちろん（強調）","表現"],["Talvez","たぶん","表現"],["Internet","インターネット","現代"],["Celular","携帯電話","現代"],["Aplicativo","アプリ","現代"],["Rede social","ソーシャルメディア","現代"],["Senha","パスワード","現代"],["Foto","写真","現代"],["Vídeo","動画","現代"],["Mensagem","メッセージ","現代"],["Notícia","ニュース","現代"],["Música","音楽","現代"],["Filme","映画","現代"],["Jogo","ゲーム","現代"],["Esporte","スポーツ","現代"],["Futebol","サッカー","現代"],["Academia","ジム","現代"],["Turismo","観光","現代"],["Delivery","デリバリー","現代"],["Problema","問題","名詞"],["Solução","解決","名詞"],["Ideia","アイデア","名詞"],["Sonho","夢","名詞"],["Esperança","希望","名詞"],["Medo","恐怖","名詞"],["Alegria","喜び","名詞"],["Tristeza","悲しみ","名詞"],["Amor","愛","名詞"],["Paz","平和","名詞"],["Guerra","戦争","名詞"],["Liberdade","自由","名詞"],["Governo","政府","名詞"],["País","国","名詞"],["Cultura","文化","名詞"],["História","歴史・物語","名詞"],["Arte","芸術","名詞"],["Ciência","科学","名詞"],["Tecnologia","技術","名詞"],["Verdade","真実","名詞"],["Mentira","嘘","名詞"],["Segredo","秘密","名詞"],["Acidente","事故","名詞"],["Perigo","危険","名詞"],["Segurança","安全","名詞"],["Lei","法律","名詞"],["Direito","権利","名詞"],["Responsabilidade","責任","名詞"],["Tempo","天気・時間","名詞"],["Calor","暑さ","名詞"]];
+const RAW=[["Olá","こんにちは","Saudações"],["Bom dia","おはようございます","Saudações"],["Boa tarde","こんにちは（午後）","Saudações"],["Boa noite","こんばんは","Saudações"],["Tchau","さようなら","Saudações"],["Até logo","またね","Saudações"],["Até amanhã","また明日","Saudações"],["Por favor","お願いします","Saudações"],["Obrigado","ありがとう（男性）","Saudações"],["Obrigada","ありがとう（女性）","Saudações"],["De nada","どういたしまして","Saudações"],["Com licença","失礼します","Saudações"],["Desculpe","すみません","Saudações"],["Sim","はい","Saudações"],["Não","いいえ","Saudações"],["Tudo bem","元気です","Saudações"],["Como vai","お元気ですか","Saudações"],["Prazer","はじめまして","Saudações"],["Bem-vindo","ようこそ","Saudações"],["Saúde","乾杯","Saudações"],["Zero","ゼロ","Números"],["Um","1","Números"],["Dois","2","Números"],["Três","3","Números"],["Quatro","4","Números"],["Cinco","5","Números"],["Seis","6","Números"],["Sete","7","Números"],["Oito","8","Números"],["Nove","9","Números"],["Dez","10","Números"],["Onze","11","Números"],["Doze","12","Números"],["Treze","13","Números"],["Catorze","14","Números"],["Quinze","15","Números"],["Vinte","20","Números"],["Trinta","30","Números"],["Quarenta","40","Números"],["Cinquenta","50","Números"],["Sessenta","60","Números"],["Setenta","70","Números"],["Oitenta","80","Números"],["Noventa","90","Números"],["Cem","100","Números"],["Mil","1000","Números"],["Primeiro","1番目","Números"],["Segundo","2番目","Números"],["Terceiro","3番目","Números"],["Último","最後の","Números"],["Hoje","今日","Tempo"],["Ontem","昨日","Tempo"],["Amanhã","明日","Tempo"],["Agora","今","Tempo"],["Depois","後で","Tempo"],["Antes","前に","Tempo"],["Sempre","いつも","Tempo"],["Nunca","決して〜ない","Tempo"],["Segunda-feira","月曜日","Tempo"],["Terça-feira","火曜日","Tempo"],["Quarta-feira","水曜日","Tempo"],["Quinta-feira","木曜日","Tempo"],["Sexta-feira","金曜日","Tempo"],["Sábado","土曜日","Tempo"],["Domingo","日曜日","Tempo"],["Janeiro","1月","Tempo"],["Fevereiro","2月","Tempo"],["Março","3月","Tempo"],["Abril","4月","Tempo"],["Maio","5月","Tempo"],["Junho","6月","Tempo"],["Julho","7月","Tempo"],["Agosto","8月","Tempo"],["Setembro","9月","Tempo"],["Outubro","10月","Tempo"],["Novembro","11月","Tempo"],["Dezembro","12月","Tempo"],["Manhã","朝・午前","Tempo"],["Tarde","午後","Tempo"],["Noite","夜","Tempo"],["Hora","時間（時）","Tempo"],["Minuto","分","Tempo"],["Semana","週","Tempo"],["Mês","月","Tempo"],["Ano","年","Tempo"],["Família","家族","Família"],["Pai","父","Família"],["Mãe","母","Família"],["Filho","息子","Família"],["Filha","娘","Família"],["Irmão","兄弟","Família"],["Irmã","姉妹","Família"],["Avô","祖父","Família"],["Avó","祖母","Família"],["Tio","叔父","Família"],["Tia","叔母","Família"],["Primo","いとこ（男）","Família"],["Prima","いとこ（女）","Família"],["Marido","夫","Família"],["Esposa","妻","Família"],["Namorado","彼氏","Família"],["Namorada","彼女","Família"],["Amigo","友達（男）","Família"],["Amiga","友達（女）","Família"],["Vizinho","隣人","Família"],["Homem","男性","Família"],["Mulher","女性","Família"],["Criança","子供","Família"],["Bebê","赤ちゃん","Família"],["Pessoa","人","Família"],["Cabeça","頭","Corpo"],["Rosto","顔","Corpo"],["Olho","目","Corpo"],["Orelha","耳","Corpo"],["Nariz","鼻","Corpo"],["Boca","口","Corpo"],["Dente","歯","Corpo"],["Língua","舌","Corpo"],["Pescoço","首","Corpo"],["Ombro","肩","Corpo"],["Braço","腕","Corpo"],["Mão","手","Corpo"],["Dedo","指","Corpo"],["Peito","胸","Corpo"],["Costas","背中","Corpo"],["Barriga","お腹","Corpo"],["Perna","足（脚）","Corpo"],["Joelho","膝","Corpo"],["Pé","足（足首以下）","Corpo"],["Coração","心臓","Corpo"],["Cabelo","髪","Corpo"],["Pele","皮膚","Corpo"],["Sangue","血","Corpo"],["Osso","骨","Corpo"],["Músculo","筋肉","Corpo"],["Doença","病気","Corpo"],["Dor","痛み","Corpo"],["Médico","医者","Corpo"],["Hospital","病院","Corpo"],["Remédio","薬","Corpo"],["Comida","食べ物","Alimentação"],["Água","水","Alimentação"],["Café","コーヒー","Alimentação"],["Leite","牛乳","Alimentação"],["Suco","ジュース","Alimentação"],["Vinho","ワイン","Alimentação"],["Cerveja","ビール","Alimentação"],["Chá","お茶","Alimentação"],["Pão","パン","Alimentação"],["Arroz","ご飯・米","Alimentação"],["Feijão","豆","Alimentação"],["Carne","肉","Alimentação"],["Frango","鶏肉","Alimentação"],["Peixe","魚","Alimentação"],["Ovo","卵","Alimentação"],["Queijo","チーズ","Alimentação"],["Manteiga","バター","Alimentação"],["Sal","塩","Alimentação"],["Açúcar","砂糖","Alimentação"],["Farinha","小麦粉","Alimentação"],["Maçã","りんご","Alimentação"],["Banana","バナナ","Alimentação"],["Laranja","オレンジ","Alimentação"],["Uva","ぶどう","Alimentação"],["Morango","いちご","Alimentação"],["Tomate","トマト","Alimentação"],["Alface","レタス","Alimentação"],["Cenoura","にんじん","Alimentação"],["Batata","じゃがいも","Alimentação"],["Cebola","玉ねぎ","Alimentação"],["Alho","にんにく","Alimentação"],["Chocolate","チョコレート","Alimentação"],["Sorvete","アイスクリーム","Alimentação"],["Bolo","ケーキ","Alimentação"],["Biscoito","ビスケット","Alimentação"],["Casa","家","Casa"],["Apartamento","アパート","Casa"],["Quarto","部屋","Casa"],["Sala","リビング","Casa"],["Cozinha","台所","Casa"],["Banheiro","バスルーム","Casa"],["Janela","窓","Casa"],["Porta","ドア","Casa"],["Chão","床","Casa"],["Teto","天井","Casa"],["Parede","壁","Casa"],["Escada","階段","Casa"],["Jardim","庭","Casa"],["Cama","ベッド","Casa"],["Mesa","テーブル","Casa"],["Cadeira","椅子","Casa"],["Sofá","ソファ","Casa"],["Armário","クローゼット","Casa"],["Geladeira","冷蔵庫","Casa"],["Fogão","コンロ","Casa"],["Forno","オーブン","Casa"],["Televisão","テレビ","Casa"],["Computador","コンピュータ","Casa"],["Telefone","電話","Casa"],["Lâmpada","電球","Casa"],["Chave","鍵","Casa"],["Espelho","鏡","Casa"],["Toalha","タオル","Casa"],["Sabão","石鹸","Casa"],["Cidade","街・都市","Lugares"],["Rua","通り","Lugares"],["Avenida","大通り","Lugares"],["Praça","広場","Lugares"],["Parque","公園","Lugares"],["Escola","学校","Lugares"],["Universidade","大学","Lugares"],["Escritório","オフィス","Lugares"],["Loja","店","Lugares"],["Mercado","市場・スーパー","Lugares"],["Banco","銀行","Lugares"],["Igreja","教会","Lugares"],["Museu","博物館","Lugares"],["Cinema","映画館","Lugares"],["Restaurante","レストラン","Lugares"],["Hotel","ホテル","Lugares"],["Aeroporto","空港","Lugares"],["Estação","駅","Lugares"],["Farmácia","薬局","Lugares"],["Biblioteca","図書館","Lugares"],["Correio","郵便局","Lugares"],["Praia","ビーチ","Lugares"],["Montanha","山","Lugares"],["Rio","川","Lugares"],["Mar","海","Lugares"],["Campo","田舎・野原","Lugares"],["Floresta","森","Lugares"],["Carro","車","Transporte"],["Ônibus","バス","Transporte"],["Trem","電車","Transporte"],["Metrô","地下鉄","Transporte"],["Avião","飛行機","Transporte"],["Barco","船","Transporte"],["Bicicleta","自転車","Transporte"],["Moto","バイク","Transporte"],["Táxi","タクシー","Transporte"],["A pé","徒歩で","Transporte"],["Mapa","地図","Transporte"],["Passaporte","パスポート","Transporte"],["Bilhete","チケット","Transporte"],["Bagagem","荷物","Transporte"],["Viagem","旅行","Transporte"],["Direita","右","Transporte"],["Esquerda","左","Transporte"],["Em frente","前","Transporte"],["Atrás","後ろ","Transporte"],["Perto","近くに","Transporte"],["Longe","遠くに","Transporte"],["Vermelho","赤","Cores e Formas"],["Azul","青","Cores e Formas"],["Verde","緑","Cores e Formas"],["Amarelo","黄色","Cores e Formas"],["Preto","黒","Cores e Formas"],["Branco","白","Cores e Formas"],["Cinza","グレー","Cores e Formas"],["Laranja","オレンジ色","Cores e Formas"],["Rosa","ピンク","Cores e Formas"],["Roxo","紫","Cores e Formas"],["Marrom","茶色","Cores e Formas"],["Grande","大きい","Cores e Formas"],["Pequeno","小さい","Cores e Formas"],["Alto","高い・背が高い","Cores e Formas"],["Baixo","低い・背が低い","Cores e Formas"],["Comprido","長い","Cores e Formas"],["Curto","短い","Cores e Formas"],["Gordo","太った","Cores e Formas"],["Magro","痩せた","Cores e Formas"],["Redondo","丸い","Cores e Formas"],["Quadrado","四角い","Cores e Formas"],["Bom","良い","Adjetivos"],["Mau","悪い","Adjetivos"],["Bonito","美しい","Adjetivos"],["Feio","醜い","Adjetivos"],["Novo","新しい・若い","Adjetivos"],["Velho","古い・年老いた","Adjetivos"],["Rápido","速い","Adjetivos"],["Lento","遅い","Adjetivos"],["Quente","熱い・暑い","Adjetivos"],["Frio","冷たい・寒い","Adjetivos"],["Fácil","簡単な","Adjetivos"],["Difícil","難しい","Adjetivos"],["Barato","安い","Adjetivos"],["Caro","高い（値段）","Adjetivos"],["Cansado","疲れた","Adjetivos"],["Feliz","幸せな","Adjetivos"],["Triste","悲しい","Adjetivos"],["Doente","病気の","Adjetivos"],["Saudável","健康な","Adjetivos"],["Limpo","清潔な","Adjetivos"],["Sujo","汚い","Adjetivos"],["Cheio","いっぱいの","Adjetivos"],["Vazio","空の","Adjetivos"],["Aberto","開いている","Adjetivos"],["Fechado","閉まっている","Adjetivos"],["Forte","強い","Adjetivos"],["Fraco","弱い","Adjetivos"],["Rico","金持ちの","Adjetivos"],["Pobre","貧しい","Adjetivos"],["Importante","重要な","Adjetivos"],["Interessante","面白い","Adjetivos"],["Inteligente","賢い","Adjetivos"],["Com fome","お腹が空いた","Adjetivos"],["Com sede","喉が渇いた","Adjetivos"],["Perigoso","危険な","Adjetivos"],["Ser","〜である（本質）","Verbos"],["Estar","〜である（状態）","Verbos"],["Ter","持っている","Verbos"],["Fazer","する・作る","Verbos"],["Ir","行く","Verbos"],["Vir","来る","Verbos"],["Querer","〜したい","Verbos"],["Poder","〜できる","Verbos"],["Saber","知っている","Verbos"],["Dizer","言う","Verbos"],["Ver","見る","Verbos"],["Ouvir","聞く","Verbos"],["Falar","話す","Verbos"],["Ler","読む","Verbos"],["Escrever","書く","Verbos"],["Comer","食べる","Verbos"],["Beber","飲む","Verbos"],["Dormir","寝る","Verbos"],["Acordar","起きる","Verbos"],["Trabalhar","働く","Verbos"],["Estudar","勉強する","Verbos"],["Morar","住む","Verbos"],["Comprar","買う","Verbos"],["Vender","売る","Verbos"],["Pagar","払う","Verbos"],["Dar","与える","Verbos"],["Receber","受け取る","Verbos"],["Abrir","開ける","Verbos"],["Fechar","閉める","Verbos"],["Entrar","入る","Verbos"],["Sair","出る","Verbos"],["Chegar","着く","Verbos"],["Partir","出発する","Verbos"],["Ajudar","助ける","Verbos"],["Precisar","必要とする","Verbos"],["Gostar","好む・好き","Verbos"],["Amar","愛する","Verbos"],["Odiar","憎む","Verbos"],["Esperar","待つ","Verbos"],["Encontrar","見つける・会う","Verbos"],["Perder","失う","Verbos"],["Ganhar","得る・勝つ","Verbos"],["Jogar","遊ぶ","Verbos"],["Correr","走る","Verbos"],["Andar","歩く","Verbos"],["Sentar","座る","Verbos"],["Levantar","立つ","Verbos"],["Colocar","置く","Verbos"],["Tirar","取る","Verbos"],["Lavar","洗う","Verbos"],["Cozinhar","料理する","Verbos"],["Limpar","掃除する","Verbos"],["Ligar","電話する・つける","Verbos"],["Desligar","切る・消す","Verbos"],["Trazer","持ってくる","Verbos"],["Levar","持っていく","Verbos"],["Mostrar","見せる","Verbos"],["Pensar","考える","Verbos"],["Acreditar","信じる","Verbos"],["Lembrar","思い出す","Verbos"],["Esquecer","忘れる","Verbos"],["Entender","理解する","Verbos"],["Conhecer","知っている（人・場所）","Verbos"],["Aprender","学ぶ","Verbos"],["Ensinar","教える","Verbos"],["Perguntar","質問する","Verbos"],["Responder","答える","Verbos"],["Chamar","呼ぶ","Verbos"],["Usar","使う","Verbos"],["Tentar","試みる","Verbos"],["Conseguir","できる・成功する","Verbos"],["Deixar","置いていく・やめる","Verbos"],["Pedir","頼む","Verbos"],["Começar","始める","Verbos"],["Terminar","終わる","Verbos"],["Continuar","続ける","Verbos"],["Voltar","戻る","Verbos"],["Mudar","変える","Verbos"],["Acontecer","起こる","Verbos"],["Sentir","感じる","Verbos"],["Parecer","〜のように見える","Verbos"],["Viver","生きる","Verbos"],["Nascer","生まれる","Verbos"],["Morrer","死ぬ","Verbos"],["Nadar","泳ぐ","Verbos"],["Dançar","踊る","Verbos"],["Cantar","歌う","Verbos"],["Tocar","弾く・触れる","Verbos"],["Desenhar","描く","Verbos"],["Viajar","旅行する","Verbos"],["Visitar","訪れる","Verbos"],["Passear","散歩する","Verbos"],["Descansar","休む","Verbos"],["Relaxar","リラックスする","Verbos"],["Cuidar","世話をする","Verbos"],["Proteger","守る","Verbos"],["Melhorar","改善する","Verbos"],["Aumentar","増える","Verbos"],["Diminuir","減る","Verbos"],["Escolher","選ぶ","Verbos"],["Decidir","決める","Verbos"],["Planejar","計画する","Verbos"],["Organizar","整理する","Verbos"],["Preparar","準備する","Verbos"],["Depender","依存する","Verbos"],["Salvar","救う","Verbos"],["Construir","建てる","Verbos"],["Sol","太陽","Natureza"],["Chuva","雨","Natureza"],["Nuvem","雲","Natureza"],["Vento","風","Natureza"],["Neve","雪","Natureza"],["Céu","空","Natureza"],["Terra","地球・土","Natureza"],["Fogo","火","Natureza"],["Luz","光","Natureza"],["Primavera","春","Natureza"],["Verão","夏","Natureza"],["Outono","秋","Natureza"],["Inverno","冬","Natureza"],["Estrela","星","Natureza"],["Lua","月","Natureza"],["Flor","花","Natureza"],["Árvore","木","Natureza"],["Folha","葉","Natureza"],["Pedra","石","Natureza"],["Areia","砂","Natureza"],["Cachorro","犬","Natureza"],["Gato","猫","Natureza"],["Pássaro","鳥","Natureza"],["Cavalo","馬","Natureza"],["Vaca","牛","Natureza"],["Porco","豚","Natureza"],["Galinha","鶏","Natureza"],["Inseto","虫","Natureza"],["Cobra","蛇","Natureza"],["Dinheiro","お金","Compras"],["Real","レアル（通貨）","Compras"],["Preço","値段","Compras"],["Desconto","割引","Compras"],["Troco","お釣り","Compras"],["Conta","請求書・口座","Compras"],["Cartão","カード","Compras"],["Recibo","レシート","Compras"],["Produto","製品","Compras"],["Tamanho","サイズ","Compras"],["Vendedor","販売員","Compras"],["Cliente","客","Compras"],["Supermercado","スーパー","Compras"],["Roupa","服","Compras"],["Sapato","靴","Compras"],["Bolsa","バッグ","Compras"],["Professor","先生（男）","Trabalho"],["Professora","先生（女）","Trabalho"],["Aluno","生徒（男）","Trabalho"],["Aluna","生徒（女）","Trabalho"],["Engenheiro","エンジニア","Trabalho"],["Advogado","弁護士","Trabalho"],["Cozinheiro","料理人","Trabalho"],["Motorista","運転手","Trabalho"],["Policial","警察官","Trabalho"],["Bombeiro","消防士","Trabalho"],["Funcionário","従業員","Trabalho"],["Chefe","上司","Trabalho"],["Colega","同僚","Trabalho"],["Reunião","会議","Trabalho"],["Projeto","プロジェクト","Trabalho"],["Salário","給料","Trabalho"],["Emprego","雇用・仕事","Trabalho"],["Férias","休暇","Trabalho"],["Aula","授業","Trabalho"],["Prova","テスト","Trabalho"],["Nota","成績","Trabalho"],["Caderno","ノート","Trabalho"],["Livro","本","Trabalho"],["Caneta","ペン","Trabalho"],["Eu","私","Pronomes"],["Tu","あなた（親しい）","Pronomes"],["Você","あなた","Pronomes"],["Ele","彼","Pronomes"],["Ela","彼女","Pronomes"],["Nós","私たち","Pronomes"],["Vocês","あなたたち","Pronomes"],["Eles","彼ら","Pronomes"],["Elas","彼女たち","Pronomes"],["Este","これ","Pronomes"],["Esse","それ","Pronomes"],["Aquele","あれ","Pronomes"],["Aqui","ここ","Pronomes"],["Lá","あそこ","Pronomes"],["Meu","私の（男）","Pronomes"],["Minha","私の（女）","Pronomes"],["Tudo","すべて","Pronomes"],["Nada","何もない","Pronomes"],["Alguém","誰か","Pronomes"],["Ninguém","誰もいない","Pronomes"],["Em","〜に・〜で","Gramática"],["De","〜から・〜の","Gramática"],["Para","〜のために・〜へ","Gramática"],["Com","〜と一緒に","Gramática"],["Sem","〜なしに","Gramática"],["Por","〜のため","Gramática"],["Até","〜まで","Gramática"],["Desde","〜以来","Gramática"],["Entre","〜の間","Gramática"],["Sobre","〜について","Gramática"],["E","そして","Gramática"],["Ou","または","Gramática"],["Mas","しかし","Gramática"],["Porque","なぜなら","Gramática"],["Quando","いつ","Gramática"],["Se","もし〜なら","Gramática"],["Como","どのように","Gramática"],["Onde","どこ","Gramática"],["Muito","とても","Gramática"],["Pouco","少し","Gramática"],["Mais","もっと","Gramática"],["Menos","より少なく","Gramática"],["Bem","よく","Gramática"],["Já","すでに","Gramática"],["Ainda","まだ","Gramática"],["Também","〜も","Gramática"],["Só","だけ","Gramática"],["Realmente","本当に","Gramática"],["Provavelmente","たぶん","Gramática"],["Finalmente","ついに","Gramática"],["Quanto custa","いくらですか","Expressões"],["Onde fica","どこにありますか","Expressões"],["Não entendo","わかりません","Expressões"],["Pode repetir","もう一度言ってください","Expressões"],["Não sei","知りません","Expressões"],["Claro","もちろん","Expressões"],["Que pena","残念です","Expressões"],["Que bom","よかったです","Expressões"],["Que saudade","懐かしい","Expressões"],["Parabéns","おめでとう","Expressões"],["Boa sorte","頑張って・幸運を","Expressões"],["Preciso de ajuda","助けが必要です","Expressões"],["Estou perdido","迷子です","Expressões"],["Com certeza","もちろん（強調）","Expressões"],["Talvez","たぶん","Expressões"],["Internet","インターネット","Modernidade"],["Celular","携帯電話","Modernidade"],["Aplicativo","アプリ","Modernidade"],["Rede social","ソーシャルメディア","Modernidade"],["Senha","パスワード","Modernidade"],["Foto","写真","Modernidade"],["Vídeo","動画","Modernidade"],["Mensagem","メッセージ","Modernidade"],["Notícia","ニュース","Modernidade"],["Música","音楽","Modernidade"],["Filme","映画","Modernidade"],["Jogo","ゲーム","Modernidade"],["Esporte","スポーツ","Modernidade"],["Futebol","サッカー","Modernidade"],["Academia","ジム","Modernidade"],["Turismo","観光","Modernidade"],["Delivery","デリバリー","Modernidade"],["Problema","問題","Substantivos"],["Solução","解決","Substantivos"],["Ideia","アイデア","Substantivos"],["Sonho","夢","Substantivos"],["Esperança","希望","Substantivos"],["Medo","恐怖","Substantivos"],["Alegria","喜び","Substantivos"],["Tristeza","悲しみ","Substantivos"],["Amor","愛","Substantivos"],["Paz","平和","Substantivos"],["Guerra","戦争","Substantivos"],["Liberdade","自由","Substantivos"],["Governo","政府","Substantivos"],["País","国","Substantivos"],["Cultura","文化","Substantivos"],["História","歴史・物語","Substantivos"],["Arte","芸術","Substantivos"],["Ciência","科学","Substantivos"],["Tecnologia","技術","Substantivos"],["Verdade","真実","Substantivos"],["Mentira","嘘","Substantivos"],["Segredo","秘密","Substantivos"],["Acidente","事故","Substantivos"],["Perigo","危険","Substantivos"],["Segurança","安全","Substantivos"],["Lei","法律","Substantivos"],["Direito","権利","Substantivos"],["Responsabilidade","責任","Substantivos"],["Tempo","天気・時間","Substantivos"],["Calor","暑さ","Substantivos"]];
 
 const WORDS = RAW.map((r,i)=>({id:i,pt:r[0],jp:r[1],cat:r[2],learned:false}));
-const CATS = ["すべて",...new Set(WORDS.map(w=>w.cat))];
+const CATS = ["Tudo"],...new Set(WORDS.map(w=>w.cat))];
 
 // ===== 状態 =====
-const S={cat:"すべて",search:"",dir:"pt-jp",tab:"list",page:1,perPage:25,
+const S={cat:"Tudo",search:"",dir:"pt-jp",tab:"list",page:1,perPage:25,
   fcList:[],fcIdx:0,fcSide:"front",
   qCorrect:0,qWrong:0,qWord:null,qAnswered:false,
   learned:new Set()};
@@ -478,14 +478,14 @@ function saveLearned(){try{localStorage.setItem("ptjp2_learned",JSON.stringify([
 
 function filtered(){
   let ws=WORDS;
-  if(S.cat!=="すべて")ws=ws.filter(w=>w.cat===S.cat);
+  if(S.cat!=="Tudo")ws=ws.filter(w=>w.cat===S.cat);
   if(S.search.trim()){const q=S.search.toLowerCase();ws=ws.filter(w=>w.pt.toLowerCase().includes(q)||w.jp.includes(q));}
   return ws;
 }
 
 // ===== 発音 =====
 function speak(text,lang){
-  if(!window.speechSynthesis){showToast("音声未対応のブラウザです");return;}
+  if(!window.speechSynthesis){showToast("Navegador sem suporte de voz");return;}
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.85;
   speechSynthesis.speak(u);
@@ -508,16 +508,66 @@ function selCat(c){S.cat=c;S.page=1;renderCats();renderList();updateStats();init
 // ===== 統計 =====
 function updateStats(){
   const fw=filtered();
-  document.getElementById("totalCnt").textContent=WORDS.length;
-  document.getElementById("showCnt").textContent=fw.length;
+  const u=UI[S.dir];
+  document.getElementById("lblTotal").innerHTML=u.total(WORDS.length);
+  document.getElementById("lblShow").innerHTML=u.show(fw.length);
   document.getElementById("learnCnt").textContent=S.learned.size;
 }
 
-// ===== 方向 =====
+// ===== 方向 & UI言語切替 =====
+const UI={
+  "pt-jp":{
+    title:'PT<span style="color:var(--ouro)">語</span>単語帳',
+    search:"🔍 検索…",
+    total:(n,s)=>`全 <strong id="totalCnt">${n}</strong> 語`,
+    show:(n)=>`表示 <strong id="showCnt">${n}</strong>`,
+    prev:"← 前へ", next:"次へ →",
+    learned:"✅ 習得済みにする",
+    tabList:"一覧", tabCard:"カード", tabQuiz:"クイズ",
+    fcHintFront:"タップして答えを見る", fcHintBack:"タップで戻る",
+    qInit:"4択から選んでください", qNext:"次の問題 →",
+    toastShuffle:"🔀 シャッフルしました！",
+    toastLearned:"✅ 習得済みにしました！",
+    toastLast:"🎉 最後のカードです！"
+  },
+  "jp-pt":{
+    title:'JP<span style="color:var(--ouro)">→</span>PT',
+    search:"🔍 Pesquisar…",
+    total:(n,s)=>`Total <strong id="totalCnt">${n}</strong>`,
+    show:(n)=>`Exibindo <strong id="showCnt">${n}</strong>`,
+    prev:"← Anterior", next:"Próximo →",
+    learned:"✅ Marcar como aprendido",
+    tabList:"Lista", tabCard:"Cartões", tabQuiz:"Quiz",
+    fcHintFront:"Toque para ver a resposta", fcHintBack:"Toque para voltar",
+    qInit:"Escolha entre 4 opções", qNext:"Próxima →",
+    toastShuffle:"🔀 Embaralhado!",
+    toastLearned:"✅ Marcado como aprendido!",
+    toastLast:"🎉 Último cartão!"
+  }
+};
+
+function applyUILang(){
+  const u=UI[S.dir];
+  document.getElementById("appTitle").innerHTML=u.title;
+  document.getElementById("searchInput").placeholder=u.search;
+  const fw=filtered();
+  document.getElementById("lblTotal").innerHTML=u.total(WORDS.length,fw.length);
+  document.getElementById("lblShow").innerHTML=u.show(fw.length);
+  document.getElementById("btnPrev").textContent=u.prev;
+  document.getElementById("btnNext").textContent=u.next;
+  document.getElementById("btnLearned").textContent=u.learned;
+  document.getElementById("tlList").textContent=u.tabList;
+  document.getElementById("tlCard").textContent=u.tabCard;
+  document.getElementById("tlQuiz").textContent=u.tabQuiz;
+  document.getElementById("qNextBtn").textContent=u.qNext;
+  if(!S.qAnswered) document.getElementById("qResult").textContent=u.qInit;
+}
+
 function setDir(d){
   S.dir=d;
   document.getElementById("dPJ").classList.toggle("active",d==="pt-jp");
   document.getElementById("dJP").classList.toggle("active",d==="jp-pt");
+  applyUILang();
   renderList();renderFC();
 }
 
@@ -605,7 +655,7 @@ function renderFC(){
   document.getElementById("fcWord").textContent=isFront?(isPtFirst?w.pt:w.jp):(isPtFirst?w.jp:w.pt);
   document.getElementById("fcLang").textContent=isFront?(isPtFirst?"Português":"日本語"):(isPtFirst?"日本語":"Português");
   document.getElementById("fcBadge").textContent=w.cat;
-  document.getElementById("fcHint").textContent=isFront?"タップして答えを見る":"タップで戻る";
+  document.getElementById("fcHint").textContent=isFront?"Toque para ver a resposta":"Toque para voltar";
   document.getElementById("fcCard").classList.toggle("back",!isFront);
   const total=S.fcList.length;
   document.getElementById("fcCounter").textContent=`${S.fcIdx+1}/${total}`;
@@ -613,12 +663,12 @@ function renderFC(){
 }
 
 function flipCard(){S.fcSide=S.fcSide==="front"?"back":"front";renderFC();}
-function nextFC(){if(S.fcIdx<S.fcList.length-1){S.fcIdx++;S.fcSide="front";renderFC();}else showToast("🎉 最後のカードです！");}
+function nextFC(){if(S.fcIdx<S.fcList.length-1){S.fcIdx++;S.fcSide="front";renderFC();}else showToast(UI[S.dir].toastLast);}
 function prevFC(){if(S.fcIdx>0){S.fcIdx--;S.fcSide="front";renderFC();}}
 
 function shuffleFC(){
   for(let i=S.fcList.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[S.fcList[i],S.fcList[j]]=[S.fcList[j],S.fcList[i]];}
-  S.fcIdx=0;S.fcSide="front";renderFC();showToast("🔀 シャッフルしました！");
+  S.fcIdx=0;S.fcSide="front";renderFC();showToast(UI[S.dir].toastShuffle);
 }
 
 function speakFC(){
@@ -632,7 +682,7 @@ function speakFC(){
 function markLearnedFC(){
   const w=S.fcList[S.fcIdx];if(!w)return;
   w.learned=true;S.learned.add(w.id);saveLearned();updateStats();
-  showToast("✅ 習得済みにしました！");
+  showToast(UI[S.dir].toastLearned);
   setTimeout(()=>nextFC(),400);
 }
 
@@ -657,11 +707,11 @@ function nextQuiz(){
   const isPtFirst=S.dir==="pt-jp";
   document.getElementById("qLabel").textContent=isPtFirst?"Português":"日本語";
   document.getElementById("qWord").textContent=isPtFirst?S.qWord.pt:S.qWord.jp;
-  document.getElementById("qResult").textContent="4択から選んでください";
+  document.getElementById("qResult").textContent="Escolha entre 4 opções";
   document.getElementById("qResult").className="quiz-result";
   document.getElementById("qNextBtn").style.display="none";
 
-  // 選択肢（正解1 + ランダム3）
+  // 選択肢
   const all=filtered().filter(w=>w.id!==S.qWord.id);
   shuffle(all);
   const choices=[S.qWord,...all.slice(0,3)];
@@ -698,8 +748,8 @@ function answerQuiz(id){
   });
 
   const res=document.getElementById("qResult");
-  if(correct){res.textContent="⭕ 正解！";res.className="quiz-result ok";}
-  else{const ans=S.dir==="pt-jp"?S.qWord.jp:S.qWord.pt;res.textContent=`❌ 不正解 → 正解は「${ans}」`;res.className="quiz-result ng";}
+  if(correct){res.textContent="⭕ Correto!";res.className="quiz-result ok";}
+  else{const ans=S.dir==="pt-jp"?S.qWord.jp:S.qWord.pt;res.textContent=`❌ Errado → Resposta: ${ans}`;res.className="quiz-result ng";}
   document.getElementById("qNextBtn").style.display="";
 
   // 発音
@@ -718,7 +768,7 @@ document.getElementById("installBtn").addEventListener("click",()=>{
   deferredPrompt.userChoice.then(r=>{
     deferredPrompt=null;
     document.getElementById("installBanner").classList.add("hidden");
-    if(r.outcome==="accepted")showToast("📲 インストールしました！");
+    if(r.outcome==="accepted")showToast("📲 Instalado!");
   });
 });
 document.getElementById("installX").addEventListener("click",()=>{
@@ -747,7 +797,7 @@ if("serviceWorker" in navigator){
 }
 
 // ===== 初期化 =====
-renderCats();renderList();updateStats();initFC();initQuiz();
+applyUILang();renderCats();renderList();updateStats();initFC();initQuiz();
 </script>
 </body>
 </html>
