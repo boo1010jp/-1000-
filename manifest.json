@@ -1,7 +1,7 @@
 {
-  "name": "ポルトガル語単語帳",
-  "short_name": "PT単語帳",
-  "description": "ポルトガル語↔日本語 入門1000語フラッシュカード",
+  "name": "日本語 ⇔ ポルトガル語 単語帳 596語",
+  "short_name": "PT単語帳596",
+  "description": "日本語 ⇔ ポルトガル語 入門596語フラッシュカード",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
