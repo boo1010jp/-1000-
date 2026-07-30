@@ -52,7 +52,7 @@ body {
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-.app-title { font-size: 1.1rem; font-weight: 700; flex: 1; }
+.app-title { font-size: 0.82rem; font-weight: 700; flex: 1; line-height: 1.4; }
 .app-title span { color: var(--ouro); }
 .header-search {
   background: rgba(255,255,255,0.18);
@@ -375,7 +375,7 @@ body {
 
 <!-- ヘッダー -->
 <div class="app-header">
-  <div class="app-title" id="appTitle">PT<span>語</span>単語帳</div>
+  <div class="app-title" id="appTitle">毎日勉強<span style="color:var(--ouro)">ごくろう</span>様<br>日本語 <span style="color:white">⇔</span> ポルトガル語　単語帳 <span style="color:var(--ouro)">596</span>語</div>
   <input class="header-search" type="search" id="searchInput" placeholder="🔍 検索…">
 </div>
 
@@ -529,7 +529,7 @@ function updateStats(){
 // ===== 方向 & UI言語切替 =====
 const UI={
   "pt-jp":{
-    title:'PT<span style="color:var(--ouro)">語</span>単語帳',
+    title:'毎日勉強<span style="color:var(--ouro)">ごくろう</span>様<br>日本語 <span style="color:white">⇔</span> ポルトガル語　単語帳 <span style="color:var(--ouro)">596</span>語',
     search:"🔍 検索…",
     total:(n,s)=>`全 <strong id="totalCnt">${n}</strong> 語`,
     show:(n)=>`表示 <strong id="showCnt">${n}</strong>`,
@@ -543,7 +543,7 @@ const UI={
     toastLast:"🎉 最後のカードです！"
   },
   "jp-pt":{
-    title:'JP<span style="color:var(--ouro)">→</span>PT',
+    title:'毎日勉強<span style="color:var(--ouro)">ごくろう</span>様<br>日本語 <span style="color:white">⇔</span> ポルトガル語　単語帳 <span style="color:var(--ouro)">596</span>語',
     search:"🔍 Pesquisar…",
     total:(n,s)=>`Total <strong id="totalCnt">${n}</strong>`,
     show:(n)=>`Exibindo <strong id="showCnt">${n}</strong>`,
