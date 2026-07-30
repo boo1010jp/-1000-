@@ -668,8 +668,8 @@ function renderFC(){
   const isPtFirst=S.dir==="pt-jp";
   document.getElementById("fcWord").textContent=isFront?(isPtFirst?w.pt:w.jp):(isPtFirst?w.jp:w.pt);
   document.getElementById("fcLang").textContent=isFront?(isPtFirst?"Português":"日本語"):(isPtFirst?"日本語":"Português");
-  document.getElementById("fcBadge").textContent=w.cat;
-  document.getElementById("fcHint").textContent=isFront?"Toque para ver a resposta":"Toque para voltar";
+  document.getElementById("fcBadge").textContent=catLabel(w.cat);
+  document.getElementById("fcHint").textContent=isFront?UI[S.dir].fcHintFront:UI[S.dir].fcHintBack;
   document.getElementById("fcCard").classList.toggle("back",!isFront);
   const total=S.fcList.length;
   document.getElementById("fcCounter").textContent=`${S.fcIdx+1}/${total}`;
