@@ -512,7 +512,7 @@ function showToast(msg){
 // ===== カテゴリ =====
 function renderCats(){
   document.getElementById("catList").innerHTML=
-    CATS_PT.map(c=>`<button class="cat-btn${S.cat===c?" active":""}" onclick="selCat(${JSON.stringify(c)})">${catLabel(c)}</button>`).join("");
+    CATS_PT.map(c=>`<button class="cat-btn${S.cat===c?" active":""}" onclick="selCat('${c.replace(/'/g,"\\'")}')">${catLabel(c)}</button>`).join("");
 }
 function selCat(c){S.cat=c;S.page=1;renderCats();renderList();updateStats();initFC();if(S.tab==="quiz")initQuiz();}
 
